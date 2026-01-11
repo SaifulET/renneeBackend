@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-import { USER_ROLE } from '../user/user.constant';
-import Product from '../products/products.model';
 import User from '../user/user.model';
-import Order from '../order/order.model';
-import Collection from '../collections/collection.model';
 import httpStatus from 'http-status';
 
 // Simple catchAsync utility
@@ -35,30 +31,37 @@ const sendResponse = (
 const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
   try {
     // Get total products count
-    const totalProducts = await Product.countDocuments();
+    // const totalProducts = await Product.countDocuments();
     
     // Get total orders count
-    const totalOrders = await Order.countDocuments();
+    // const totalOrders = await Order.countDocuments();
     
     // Get total customers count (users with buyer role)
     const totalCustomers = await User.countDocuments({ role: 'buyer' });
     
     // Get total collections count
-    const totalCollections = await Collection.countDocuments();
+    // const totalCollections = await Collection.countDocuments();
 
     // Get recent orders (last 5)
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('customerId', 'fullname email')
-      .populate('items.productId', 'name price');
+    // const recentOrders = await Order.find()
+    //   .sort({ createdAt: -1 })
+    //   .limit(5)
+    //   .populate('customerId', 'fullname email')
+    //   .populate('items.productId', 'name price');
 
     // Get top selling products
-    const topSellingProducts = await Product.aggregate([
-      { $sort: { sold: -1 } },
-      { $limit: 5 },
-      { $project: { name: 1, price: 1, sold: 1, images: { $slice: ['$images', 1] } } }
-    ]);
+    // const topSellingProducts = await Product.aggregate([
+    //   { $sort: { sold: -1 } },
+    //   { $limit: 5 },
+    //   { $project: { name: 1, price: 1, sold: 1, images: { $slice: ['$images', 1] } } }
+    // ]);
+    
+    // Dummy stats for now
+    const totalProducts = 0;
+    const totalOrders = 0;
+    const totalCollections = 0;
+    const recentOrders: any[] = [];
+    const topSellingProducts: any[] = [];
 
     const stats = {
       summary: {
@@ -177,24 +180,26 @@ const getRecentOrders = catchAsync(async (req: Request, res: Response) => {
   try {
     const { limit = 10 } = req.query;
     
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(Number(limit))
-      .populate('customerId', 'fullname email')
-      .populate('items.productId', 'name price')
-      .select('customerId status createdAt totalAmount items');
+    // const recentOrders = await Order.find()
+    //   .sort({ createdAt: -1 })
+    //   .limit(Number(limit))
+    //   .populate('customerId', 'fullname email')
+    //   .populate('items.productId', 'name price')
+    //   .select('customerId status createdAt totalAmount items');
 
-    const formattedOrders = recentOrders.map(order => {
-      const customer = order.customerId as any;
-      return {
-        orderNumber: `#LUN-${String(order._id).slice(-3).toUpperCase()}`,
-        customerName: customer?.fullname || 'Unknown',
-        status: order.status,
-        date: order.createdAt.toISOString().split('T')[0],
-        totalAmount: order.totalAmount,
-        items: order.items
-      };
-    });
+    // const formattedOrders = recentOrders.map(order => {
+    //   const customer = order.customerId as any;
+    //   return {
+    //     orderNumber: `#LUN-${String(order._id).slice(-3).toUpperCase()}`,
+    //     customerName: customer?.fullname || 'Unknown',
+    //     status: order.status,
+    //     date: order.createdAt.toISOString().split('T')[0],
+    //     totalAmount: order.totalAmount,
+    //     items: order.items
+    //   };
+    // });
+    
+    const formattedOrders: any[] = [];
 
     sendResponse(res, {
       statusCode: httpStatus.OK,

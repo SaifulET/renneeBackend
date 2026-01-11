@@ -178,7 +178,7 @@ const chnagePasswordIntoDb = async (
     if (
       !(await users.isPasswordMatched(
         payload.oldpassword,
-        isUserExist?.password
+        isUserExist.password as string
       ))
     ) {
       throw new AppError(
