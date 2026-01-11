@@ -8,10 +8,12 @@ export interface UserResponse {
 
 export type TUser = {
   id: string;
-  role: "buyer" | "seller" | "admin" | "superAdmin";
+  role: "buyer" | "consultant" | "admin" | "superAdmin";
+  auth_type: "email" | "google" | "apple";
+  specialty?: string;
   gender: "Male" | "Female" | "Others";
   fullname: string;
-  password: string;
+  password?: string; // Made optional for social login
   email: string;
   phoneNumber?: string;
   verificationCode: number;

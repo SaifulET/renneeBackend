@@ -43,10 +43,18 @@ const TUserSchema = new Schema<TUser, UserModel>(
       required: [false, "isVartify is not required"],
       default: false,
     },
+    auth_type: {
+      type: String,
+      enum: ["email", "google", "apple"],
+      default: "email",
+    },
+    specialty: {
+      type: String,
+    },
     role: {
       type: String,
       enum: {
-        values: [USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin],
+        values: [USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin],
         message: "{VALUE} is Not Required",
       },
       required: [true, "Role is Required"],

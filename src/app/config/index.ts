@@ -30,4 +30,8 @@ export default {
   },
   file_path: process.env.FILE_PATH,
   host: process.env.HOST,
+  firebase: {
+    service_account_path: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+    project_id: process.env.FIREBASE_PROJECT_ID,
+  },
 };

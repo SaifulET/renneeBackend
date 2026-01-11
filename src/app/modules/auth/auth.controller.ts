@@ -106,7 +106,27 @@ const find_by_all_admin: RequestHandler = catchAsync(async (req, res) => {
   });
 
 
-})
+  find_by_all_admin
+});
+
+const loginUserViaSocial: RequestHandler = catchAsync(async (req, res) => {
+  const result = await AuthServices.loginUserViaSocial(req.body);
+  const { refreshToken, accessToken } = result;
+
+  res.cookie("refreshToken", refreshToken, {
+    secure: config.NODE_ENV === "production",
+    httpOnly: true,
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Logged in with Social",
+    data: {
+      accessToken,
+    },
+  });
+});
 
 const AuthController = {
   loginUser,
@@ -116,7 +136,8 @@ const AuthController = {
   findByAllUsersAdmin,
   deleteAccount,
   isBlockAccount,
-  find_by_all_admin
+  find_by_all_admin,
+  loginUserViaSocial,
 };
 
 export default AuthController;

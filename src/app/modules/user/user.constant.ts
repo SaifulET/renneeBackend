@@ -3,7 +3,7 @@ import config from "../../config";
 //'admin' | 'user' | 'faculty'
 export const USER_ROLE = {
   buyer: "buyer",
-  seller: "seller",
+  consultant: "consultant",
   admin: "admin",
   superAdmin: "superAdmin"
 } as const;

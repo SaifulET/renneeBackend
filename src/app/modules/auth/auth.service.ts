@@ -13,6 +13,7 @@ import {
   uploadImageToCloudinary,
 } from "../../utils/cloudinary";
 import fs from "fs";
+import admin from "../../utils/firebase";
 
 const loginUserIntoDb = async (payload: {
   email: string;
@@ -59,8 +60,12 @@ const loginUserIntoDb = async (payload: {
       );
     }
 
+    if (!isUserExist.password) {
+      throw new AppError(httpStatus.FORBIDDEN, "This Password Not Matched", "");
+    }
+
     if (
-      !(await users.isPasswordMatched(payload?.password, isUserExist.password))
+      !(await users.isPasswordMatched(payload.password, isUserExist.password))
     ) {
       throw new AppError(httpStatus.FORBIDDEN, "This Password Not Matched", "");
     }
@@ -98,6 +103,66 @@ const loginUserIntoDb = async (payload: {
     throw error;
   } finally {
     session.endSession();
+  }
+};
+
+const loginUserViaSocial = async (payload: { idToken: string; role?: string }) => {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(payload.idToken);
+    const { email, name, picture, uid, firebase } = decodedToken;
+    const provider = firebase.sign_in_provider;
+
+    if (!email) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Email is required from social provider");
+    }
+
+    let user = await users.findOne({ email });
+
+    let authType = "email";
+    if (provider === "google.com") authType = "google";
+    if (provider === "apple.com") authType = "apple";
+
+    if (!user) {
+      // Create new user
+      const newUser = await users.create({
+        email,
+        fullname: name || "User",
+        role: payload.role || USER_ROLE.buyer,
+        auth_type: authType,
+        photo: picture,
+        isVerify: true,
+        status: USER_ACCESSIBILITY.isProgress,
+        password: "", // Not used
+        isDelete: false,
+      });
+      user = newUser;
+    }
+
+    // Generate Tokens
+    const jwtPayload = {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+    };
+
+    const accessToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.expires_in as string
+    );
+
+    const refreshToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      config.refresh_expires_in as string
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  } catch (error: any) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Social Login Failed", error.message);
   }
 };
 
@@ -364,6 +429,7 @@ const AuthServices = {
   deleteAccountIntoDb,
   isBlockAccountIntoDb,
   find_by_all_admin_IntoDb,
+  loginUserViaSocial,
 };
 
 export default AuthServices;

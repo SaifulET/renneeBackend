@@ -1,28 +1,14 @@
 import express from "express";
-import contactRoutes from "../modules/contact/contact.router";
 import AuthRouter from "../modules/auth/auth.routes";
 import UserRouters from "../modules/user/user.routes";
-import SettingsRoutes from "../modules/settings/settings.routres";
-import BlogsRoutes from "../modules/blogs/blogs.routes";
-import FaqRoutes from "../modules/faq/faq.routes";
-import ProductRoutes from "../modules/products/products.route";
-import CollectionRoutes from "../modules/collections/collection.route";
-import ReviewRoutes from "../modules/reviews/reviews.route";
-import WishlistRoutes from "../modules/wishlists/wishlists.route";
-import CartRoutes from "../modules/cart/cart.route";
-import PaymentRoutes from "../modules/payment/payment.routes";
-import OrderRoutes from "../modules/order/order.routes";
-import { DashboardRoutes } from "../modules/dashboardstats/dashboard.router";
 
-
+import { BookingRoutes } from "../modules/bookings/booking.routes";
+import { CategoryRoutes } from "../modules/categories/category.routes";
+import { ServiceRoutes } from "../modules/services/service.routes";
 
 const router = express.Router();
 
 const moduleRoutes = [
-  {
-    path: "/contact",
-    route: contactRoutes,
-  },
   {
     path: "/auth",
     route: AuthRouter,
@@ -32,48 +18,16 @@ const moduleRoutes = [
     route: UserRouters,
   },
   {
-    path: "/product",
-    route: ProductRoutes,
+    path: "/bookings",
+    route: BookingRoutes,
   },
   {
-    path: "/collection",
-    route: CollectionRoutes,
+    path: "/categories",
+    route: CategoryRoutes,
   },
   {
-    path: "/review",
-    route: ReviewRoutes,
-  },
-  {
-    path: "/wishlist",
-    route: WishlistRoutes,
-  },
-  {
-    path: "/cart",
-    route: CartRoutes,
-  },
-  {
-    path: "/payment",
-    route: PaymentRoutes,
-  },
-  {
-    path: "/order",
-    route: OrderRoutes,
-  },
-  {
-    path: "/setting",
-    route: SettingsRoutes,
-  },
-  {
-    path: "/blogs",
-    route: BlogsRoutes,
-  },
-  {
-    path: "/faq",
-    route: FaqRoutes,
-  },
-  {
-    path: "/dashboard",
-    route: DashboardRoutes,
+    path: "/services",
+    route: ServiceRoutes,
   },
 ];
 

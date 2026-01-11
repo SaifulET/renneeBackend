@@ -24,7 +24,7 @@ router.patch(
 
 router.patch(
   "/change_password",
-  auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
   validationRequest(UserValidationSchema.ChnagePasswordSchema),
   UserController.chnagePassword
 );

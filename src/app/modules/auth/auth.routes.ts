@@ -31,7 +31,7 @@ router.get(
 // Routes file
 router.patch(
   "/update_my_profile",
-  auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
   upload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -55,7 +55,7 @@ router.get(
 
 router.delete(
   "/delete_account/:id",
-  auth(USER_ROLE.seller, USER_ROLE.buyer, USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.consultant, USER_ROLE.buyer, USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin),
   AuthController.deleteAccount
 );
 
