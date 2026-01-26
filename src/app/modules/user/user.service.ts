@@ -38,22 +38,23 @@ const createUserIntoDb = async (payload: TUser) => {
 
   try {
     // 1. Check if user already exists
-    const isExistUser = await users.findOne(
-      {
-        email: payload.email,
-        isDelete: false,
-        isVerify: true,
-        status: USER_ACCESSIBILITY.isProgress,
-      },
-      { _id: 1, email: 1, phoneNumber: 1, role: 1 }
-    );
-
-    if (isExistUser) {
-      await session.abortTransaction();
-      session.endSession();
+    // Check if email already exists
+    if (await users.findOne({ email: payload.email })) {
       throw new AppError(
         httpStatus.FOUND,
-        "This email already exists in our database",
+        "User with this email already exists",
+        ""
+      );
+    }
+
+    // Check if phone number already exists
+    if (
+      payload.phoneNumber &&
+      (await users.findOne({ phoneNumber: payload.phoneNumber }))
+    ) {
+      throw new AppError(
+        httpStatus.FOUND,
+        "User with this phone number already exists",
         ""
       );
     }
@@ -89,6 +90,10 @@ const createUserIntoDb = async (payload: TUser) => {
   } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
+
+    if (error instanceof AppError) {
+      throw error;
+    }
 
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
