@@ -6,29 +6,29 @@ import { USER_ROLE } from "../user/user.constant";
 const router = express.Router();
 
 router.post(
-  "/",
+  "/createService",
   auth(USER_ROLE.admin),
   ServiceController.createService
 );
 
 router.get(
-  "/",
+  "/getallservices",
   ServiceController.getAllServices
 );
 
 router.get(
-  "/:id",
+  "/getservicebyid/:id",
   ServiceController.getServiceById
 );
 
 router.patch(
-  "/:id",
+  "/updateservice/:id",
   auth(USER_ROLE.admin),
   ServiceController.updateService
 );
 
 router.delete(
-  "/:id",
+  "/deleteservice/:id",
   auth(USER_ROLE.admin),
   ServiceController.deleteService
 );

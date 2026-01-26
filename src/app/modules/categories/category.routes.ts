@@ -6,29 +6,29 @@ import { USER_ROLE } from "../user/user.constant";
 const router = express.Router();
 
 router.post(
-  "/",
+  "/createcategory",
   auth(USER_ROLE.admin),
   CategoryController.createCategory
 );
 
 router.get(
-  "/",
+  "/getallcategories",
   CategoryController.getAllCategories
 );
 
 router.get(
-  "/:id",
+  "/getcategorybyid/:id",
   CategoryController.getCategoryById
 );
 
 router.patch(
-  "/:id",
+  "/updatecategory/:id",
   auth(USER_ROLE.admin),
   CategoryController.updateCategory
 );
 
 router.delete(
-  "/:id",
+  "/deletecategory/:id",
   auth(USER_ROLE.admin),
   CategoryController.deleteCategory
 );
