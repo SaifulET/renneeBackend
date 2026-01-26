@@ -15,7 +15,7 @@ const auth = (...requireRoles: TUserRole[]) => {
       if (!token) {
         throw new AppError(
           httpStatus.UNAUTHORIZED,
-          'You are not Authorized',
+          'You are not Authorized, Access Token is Required',
           '',
         );
       }

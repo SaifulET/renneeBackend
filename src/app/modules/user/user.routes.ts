@@ -11,7 +11,6 @@ const router = express.Router();
 // Create user (Admin creation) - Restricted to Super Admin
 router.post(
   "/create_user",
-  auth(USER_ROLE.superAdmin),
   validationRequest(UserValidationSchema.createUserZodSchema),
   UserController.createUser
 );
@@ -43,6 +42,7 @@ router.post(
 
 router.post(
   "/reset_password",
+  auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
   validationRequest(UserValidationSchema.resetPasswordSchema),
   UserController.resetPassword
 );

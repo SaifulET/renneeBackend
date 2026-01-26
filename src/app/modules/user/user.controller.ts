@@ -9,7 +9,7 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Successfully Change Onboarding Status",
+    message: "User Created Successfully",
     data: result,
   });
 });
@@ -56,7 +56,7 @@ const verificationForgotUser: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const resetPassword: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserServices.resetPasswordIntoDb(req.body);
+  const result = await UserServices.resetPasswordIntoDb({ ...req.body, userId: req.user.id });
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

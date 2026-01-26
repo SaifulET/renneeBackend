@@ -21,12 +21,7 @@ const createUserZodSchema = z.object({
           message: "Invalid email format",
         }
       ),
-    phoneNumber: z
-      .string({ message: "Phone number is required" })
-      
-     
-      
-      .optional(),
+    phoneNumber: z.string({ message: "Phone number is required" }).optional(),
 
     role: z
       .nativeEnum(USER_ROLE, {
@@ -105,7 +100,6 @@ const verificationCodeSchema = z.object({
 
 const resetPasswordSchema = z.object({
   body: z.object({
-    userId: z.string({ message: "userId is required" }),
     password: z.string({ message: "password is required" }),
   }),
 });

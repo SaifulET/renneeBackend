@@ -308,7 +308,7 @@ const forgotPasswordIntoDb = async (payload: string | { email: string }) => {
 
 const verificationForgotUserIntoDb = async (
   otp: number | { verificationCode: number }
-): Promise<string> => {
+): Promise<{ accessToken: string }> => {
   try {
     let code: number;
 
@@ -369,7 +369,7 @@ const verificationForgotUserIntoDb = async (
       { $unset: { verificationCode: "" } }
     );
 
-    return accessToken;
+    return { accessToken };
   } catch (error: any) {
     if (error instanceof AppError) {
       throw error;
