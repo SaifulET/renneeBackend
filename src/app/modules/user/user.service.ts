@@ -48,16 +48,7 @@ const createUserIntoDb = async (payload: TUser) => {
     }
 
     // Check if phone number already exists
-    if (
-      payload.phoneNumber &&
-      (await users.findOne({ phoneNumber: payload.phoneNumber }))
-    ) {
-      throw new AppError(
-        httpStatus.FOUND,
-        "User with this phone number already exists",
-        ""
-      );
-    }
+
 
     // 2. Generate OTP after existence check
     const otp = await generateUniqueOTP();

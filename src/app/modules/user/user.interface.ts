@@ -15,7 +15,6 @@ export type TUser = {
   fullname: string;
   password?: string; // Made optional for social login
   email: string;
-  phoneNumber?: string;
   verificationCode: number;
   isVerify: boolean;
   status: "isProgress" | "Blocked";
@@ -25,6 +24,7 @@ export type TUser = {
   isStripeConnected?: boolean;
   fcm?: string;
   address?: string;
+  phoneNumber?: string;
   isDelete: boolean;
 };
 

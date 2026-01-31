@@ -12,7 +12,7 @@ const TUserSchema = new Schema<TUser, UserModel>(
       required: [false, "user fullname is Required"],
     },
 
-    password: { type: String, required: [false, "Password is Required"] },
+    password: { type: String, required: [false, "Password is Required"], select: 0 },
     email: {
       type: String,
       required: [false, "Email is Required"],
@@ -28,11 +28,7 @@ const TUserSchema = new Schema<TUser, UserModel>(
       required: [false, "Role is Required"],
     },
 
-    phoneNumber: {
-      type: String,
-      required: [false, "phoneNumber is Required"],
-      unique: true,
-    },
+
 
     verificationCode: {
       type: Number,
@@ -92,6 +88,10 @@ const TUserSchema = new Schema<TUser, UserModel>(
     address: {
       type: String,
       required: [false, "address is not required"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [false, "phone number is not required"],
     },
     fcm: {
       type: String,

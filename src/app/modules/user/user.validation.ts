@@ -21,7 +21,7 @@ const createUserZodSchema = z.object({
           message: "Invalid email format",
         }
       ),
-    phoneNumber: z.string({ message: "Phone number is required" }).optional(),
+
 
     role: z
       .nativeEnum(USER_ROLE, {
@@ -67,7 +67,7 @@ const UpdateUserProfileSchema = z.object({
       .max(15, { message: "max 15 characters accepted" })
       .optional(),
 
-    phoneNumber: z.string({ message: "phone number is optional" }).optional(),
+
     address: z.string({ message: "address is not required" }).optional(),
     photo: z.string({ message: "optional photo" }).url().optional(),
   }),

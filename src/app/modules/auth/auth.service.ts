@@ -220,7 +220,9 @@ const myprofileIntoDb = async (id: string) => {
   try {
     return await users
       .findById(id)
-      .select("fullname email  address photo phoneNumber role");
+      .select(
+        "fullname email phoneNumber photo status createdAt updatedAt role auth_type fcm"
+      );
   } catch (error: any) {
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
@@ -278,13 +280,13 @@ const changeMyProfileIntoDb = async (
 
       try {
         fs.unlinkSync(file.path);
-      } catch {}
+      } catch { }
 
       try {
         if (existingUser?.photoPublicId) {
           await deleteFromCloudinary(existingUser.photoPublicId);
         }
-      } catch {}
+      } catch { }
     }
 
     if (Object.keys(updateData).length === 0) {

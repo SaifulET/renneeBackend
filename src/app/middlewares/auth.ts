@@ -33,7 +33,7 @@ const auth = (...requireRoles: TUserRole[]) => {
 
       const { role, id } = decoded;
 
-      const isUserExist = users.findOne(
+      const isUserExist = await users.findOne(
         {
           _id: id,
           isVerify: true,
@@ -45,7 +45,7 @@ const auth = (...requireRoles: TUserRole[]) => {
       if (!isUserExist) {
         throw new AppError(
           httpStatus.NOT_FOUND,
-          'This User is Not Founded',
+          'This User is Not Found',
           '',
         );
       }
