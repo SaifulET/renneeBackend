@@ -221,7 +221,7 @@ const myprofileIntoDb = async (id: string) => {
     return await users
       .findById(id)
       .select(
-        "fullname email phoneNumber photo status createdAt updatedAt role auth_type fcm"
+        "fullname email phoneNumber address gender photo status createdAt updatedAt role auth_type fcm"
       );
   } catch (error: any) {
     throw new AppError(

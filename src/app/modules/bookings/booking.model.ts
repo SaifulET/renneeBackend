@@ -5,6 +5,7 @@ const BookingSchema = new Schema(
     user: { type: Schema.Types.ObjectId, ref: "users", required: true },
     service: { type: Schema.Types.ObjectId, ref: "Service", required: true },
     consultant: { type: Schema.Types.ObjectId, ref: "users", required: true },
+    discount: {type: Schema.Types.ObjectId, ref: "Discount"},
     date: { type: Date, required: true },
     slot_time: { type: String, required: true }, // "HH:mm"
     meeting_type: {

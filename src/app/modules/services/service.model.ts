@@ -17,7 +17,6 @@ const ServiceSchema = new Schema(
     custom_slots: [
       {
         start_time: { type: String, required: true }, // "HH:mm"
-        end_time: { type: String, required: true }, // "HH:mm"
       },
     ],
     consultant_ids: [{ type: Schema.Types.ObjectId, ref: "users" }],

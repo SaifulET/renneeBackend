@@ -7,6 +7,7 @@ import { CategoryRoutes } from "../modules/categories/category.routes";
 import { ServiceRoutes } from "../modules/services/service.routes";
 import SettingsRoutes from "../modules/settings/settings.routres";
 import contactRoutes from "../modules/contact/contact.router";
+import { DiscountRoutes } from "../modules/discounts/discount.routes";
 
 
 const router = express.Router();
@@ -36,9 +37,13 @@ const moduleRoutes = [
     path: "/settings",
     route: SettingsRoutes,
   },
-    {
+  {
     path: "/contact",
     route: contactRoutes,
+  },
+  {
+    path: "/discounts",
+    route: DiscountRoutes,
   },
 ];
 
