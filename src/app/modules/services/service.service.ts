@@ -1,6 +1,7 @@
+import { TService } from "./service.interface";
 import { Service } from "./service.model";
 
-const createService = async (payload: any) => {
+const createService = async (payload: TService) => {
   const result = await Service.create(payload);
   return result;
 };
@@ -15,7 +16,7 @@ const getServiceById = async (id: string) => {
   return result;
 };
 
-const updateService = async (id: string, payload: any) => {
+const updateService = async (id: string, payload: Partial<TService>) => {
   const result = await Service.findByIdAndUpdate(id, payload, { new: true });
   return result;
 };

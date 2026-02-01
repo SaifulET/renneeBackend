@@ -73,11 +73,51 @@ const confirmBooking = async (payload: any) => {
   const isAvailable = availableSlots.some((slot: any) => slot.start_time === payload.slot_time);
 
   if (!isAvailable) {
-     throw new AppError(httpStatus.CONFLICT, "Slot already booked", "");
+    throw new AppError(httpStatus.CONFLICT, "Slot already booked", "");
   }
 
   payload.payment_status = "Paid";
   const booking = await Booking.create(payload);
+
+  // Update Service Unavailability
+  const service = await Service.findById(serviceId);
+  if (service) {
+    const bookingDate = new Date(payload.date);
+
+    // Find if date exists in unavailable_slots_of_date
+    let slotEntry = service.unavailable_slots_of_date.find(
+      (entry) => new Date(entry.date).toDateString() === bookingDate.toDateString()
+    );
+
+    if (slotEntry) {
+      if (!slotEntry.slots.includes(payload.slot_time)) {
+        slotEntry.slots.push(payload.slot_time);
+      }
+    } else {
+      service.unavailable_slots_of_date.push({
+        date: bookingDate,
+        slots: [payload.slot_time]
+      });
+      // refetch reference potentially needed if push doesn't return the object in a way TS likes, 
+      // but typically simple push works.
+      // We need to re-find it to check length below, or just look at last element.
+      slotEntry = service.unavailable_slots_of_date[service.unavailable_slots_of_date.length - 1];
+    }
+
+    // Check if full
+    const totalSlots = service.custom_slots.length;
+
+    if (slotEntry && slotEntry.slots.length >= totalSlots) {
+      const isDateUnavailable = service.unavailable_dates.some(
+        (d) => new Date(d).toDateString() === bookingDate.toDateString()
+      );
+      if (!isDateUnavailable) {
+        service.unavailable_dates.push(bookingDate);
+      }
+    }
+
+    await service.save();
+  }
 
   // Send Notification
   const consultant = await users.findById(consultantId);
@@ -90,8 +130,8 @@ const confirmBooking = async (payload: any) => {
       `You have a new booking with ${user?.fullname || "a client"} at ${payload.slot_time}`
     );
   }
-  
-    if (user?.fcm) {
+
+  if (user?.fcm) {
     await sendPushNotification(
       user.fcm,
       "Booking Confirmed",

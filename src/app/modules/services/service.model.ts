@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { ServiceModel, TService } from "./service.interface";
 
-const ServiceSchema = new Schema(
+const ServiceSchema = new Schema<TService, ServiceModel>(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -14,6 +15,13 @@ const ServiceSchema = new Schema(
       required: true,
     },
     weekends: [{ type: String }], // e.g., ["Saturday", "Sunday"]
+    unavailable_dates: [{ type: Date }],
+    unavailable_slots_of_date: [
+      {
+        date: { type: Date, required: true },
+        slots: [{ type: String }],
+      },
+    ],
     custom_slots: [
       {
         start_time: { type: String, required: true }, // "HH:mm"
@@ -27,4 +35,4 @@ const ServiceSchema = new Schema(
   }
 );
 
-export const Service = model("Service", ServiceSchema);
+export const Service = model<TService, ServiceModel>("Service", ServiceSchema);
