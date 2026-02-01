@@ -18,6 +18,7 @@ routes.post(
 
 routes.get('/find_by_about_us', SettingController.findByAboutUs);
 
+
 routes.post(
   '/privacy_policys',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
@@ -25,7 +26,7 @@ routes.post(
   SettingController.privacyPolicys,
 );
 routes.get(
-  '/find_by_privacy_policyss',
+  '/find_by_privacy_policy',
   SettingController.findByPrivacyPolicyss,
 );
 
@@ -38,6 +39,18 @@ routes.post(
 routes.get(
   '/find_by_terms_conditions',
   SettingController.findByTermsConditions,
+);
+
+routes.get(
+  '/get_socal_media_links_address_phone_email',
+  SettingController.getSocalMediaLinks,
+);
+
+routes.post(
+  '/socal_media_links_address_phone_email',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  validationRequest(settingValidationSchema.SocalMediaLinksValidationSchema),
+  SettingController.socalMediaLinks,
 );
 
 const SettingsRoutes = routes;

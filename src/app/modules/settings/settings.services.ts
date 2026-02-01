@@ -1,6 +1,6 @@
-import { aboutus, privacypolicys, termsConditions } from './settings.modal';
+import { aboutus, privacypolicys, termsConditions, socalMediaLinks } from './settings.modal';
 import httpStatus from 'http-status';
-import { TAboutUs, TPrivacyPolicy, TTermsConditions } from './settings.interface';
+import { TAboutUs, TPrivacyPolicy, TTermsConditions, TSocalMediaLinks } from './settings.interface';
 import AppError from '../../errors/AppError';
 
 
@@ -46,7 +46,7 @@ const findByAboutUsIntoDb = async () => {
   }
 };
 
-const  privacyPolicysIntoDb= async (payload: TPrivacyPolicy) => {
+const privacyPolicysIntoDb = async (payload: TPrivacyPolicy) => {
   try {
     const privacyPolicyText = payload.PrivacyPolicy?.trim() ?? "";
 
@@ -137,13 +137,51 @@ const findBytermsConditionsIntoDb = async () => {
   }
 };
 
+const socalMediaLinksIntoDb = async (payload: TSocalMediaLinks) => {
+  try {
+    const result = await socalMediaLinks.findOneAndUpdate(
+      {},
+      payload,
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+
+    return result
+      ? { status: true, message: "Social Media Links successfully saved" }
+      : { status: false, message: "Failed to save Social Media Links" };
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Failed to save Social Media Links into DB",
+      error
+    );
+  }
+};
+
+const getSocalMediaLinksIntoDb = async () => {
+  try {
+    const result = await socalMediaLinks
+      .findOne()
+      .select('-createdAt -updatedAt -__v');
+
+    return result;
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to get Social Media Links from db',
+      error,
+    );
+  }
+};
+
 const SettingServices = {
   updateAboutUsIntoDb,
   findByAboutUsIntoDb,
   privacyPolicysIntoDb,
   findByPrivacyPolicyssIntoDb,
   termsConditionsIntoDb,
-  findBytermsConditionsIntoDb
+  findBytermsConditionsIntoDb,
+  socalMediaLinksIntoDb,
+  getSocalMediaLinksIntoDb,
 };
 
 export default SettingServices;

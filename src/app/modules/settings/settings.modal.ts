@@ -6,6 +6,8 @@ import {
   TermsConditionsModel,
   TPrivacyPolicy,
   TTermsConditions,
+  TSocalMediaLinks,
+  SocalMediaLinksModel,
 } from './settings.interface';
 
 const AboutUsSchema = new Schema<TAboutUs, AboutModel>(
@@ -116,6 +118,79 @@ export const privacypolicys = model<TPrivacyPolicy, PrivacyPolicyModel>(
 );
 
 export const termsConditions = model<TTermsConditions, TermsConditionsModel>(
-  ' termsConditions',
+  'termsConditions',
   TermsConditionSchema,
+);
+
+const SocalMediaLinksSchema = new Schema<TSocalMediaLinks, SocalMediaLinksModel>(
+  {
+    facebook: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    instagram: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    twitter: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    linkedin: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    youtube: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    tiktok: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    whatsapp: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    telegram: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    snapchat: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    address: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    phone: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    email: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    website: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+    appName: {
+      url: { type: String, default: "" },
+      isActive: { type: Boolean, default: false }
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+SocalMediaLinksSchema.statics.isSocalMediaLinksCustomId = async function (id: string) {
+  return this.findById(id);
+};
+
+export const socalMediaLinks = model<TSocalMediaLinks, SocalMediaLinksModel>(
+  'socalMediaLinks',
+  SocalMediaLinksSchema,
 );

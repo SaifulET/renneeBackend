@@ -20,10 +20,35 @@ const TermsConditionsValidationSchema = z.object({
   }),
 });
 
+const SocialMediaLinkSchema = z.object({
+  url: z.string().optional(),
+  isActive: z.boolean().optional().default(true),
+});
+
+const SocalMediaLinksValidationSchema = z.object({
+  body: z.object({
+    facebook: SocialMediaLinkSchema.optional(),
+    instagram: SocialMediaLinkSchema.optional(),
+    twitter: SocialMediaLinkSchema.optional(),
+    linkedin: SocialMediaLinkSchema.optional(),
+    youtube: SocialMediaLinkSchema.optional(),
+    tiktok: SocialMediaLinkSchema.optional(),
+    whatsapp: SocialMediaLinkSchema.optional(),
+    telegram: SocialMediaLinkSchema.optional(),
+    snapchat: SocialMediaLinkSchema.optional(),
+    address: SocialMediaLinkSchema.optional(),
+    phone: SocialMediaLinkSchema.optional(),
+    email: SocialMediaLinkSchema.optional(),
+    website: SocialMediaLinkSchema.optional(),
+    appName: SocialMediaLinkSchema.optional(),
+  }),
+});
+
 const settingValidationSchema = {
   AboutValidationSchema,
   PrivacyPolicysValidationSchema,
   TermsConditionsValidationSchema,
+  SocalMediaLinksValidationSchema,
 };
 
 export default settingValidationSchema;

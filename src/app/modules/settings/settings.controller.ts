@@ -66,6 +66,26 @@ const findByTermsConditions: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const getSocalMediaLinks: RequestHandler = catchAsync(async (req, res) => {
+  const result = await SettingServices.getSocalMediaLinksIntoDb();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Find Social Media Links",
+    data: result,
+  });
+});
+
+const socalMediaLinks: RequestHandler = catchAsync(async (req, res) => {
+  const result = await SettingServices.socalMediaLinksIntoDb(req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Updated Social Media Links",
+    data: result,
+  });
+});
+
 const SettingController = {
   updateAboutUs,
   findByAboutUs,
@@ -73,6 +93,8 @@ const SettingController = {
   findByPrivacyPolicyss,
   termsConditions,
   findByTermsConditions,
+  getSocalMediaLinks,
+  socalMediaLinks,
 };
 
 export default SettingController;
