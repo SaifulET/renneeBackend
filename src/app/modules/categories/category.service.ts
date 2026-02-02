@@ -1,6 +1,27 @@
 import { Category } from "./category.model";
+import { uploadImageToCloudinary } from "../../utils/cloudinary";
+import fs from "fs";
 
-const createCategory = async (payload: any) => {
+const createCategory = async (req: any) => {
+  const file = req.file;
+  const payload = req.body;
+
+  if (file) {
+    const filePath = file.path.replace(/\\/g, "/");
+    const uploaded = await uploadImageToCloudinary(
+      filePath,
+      "categories",
+      "high"
+    );
+    payload.img = uploaded.secure_url;
+
+    try {
+      fs.unlinkSync(file.path);
+    } catch (err) {
+      console.error("Error deleting local file:", err);
+    }
+  }
+
   const result = await Category.create(payload);
   return result;
 };
@@ -15,7 +36,27 @@ const getCategoryById = async (id: string) => {
   return result;
 };
 
-const updateCategory = async (id: string, payload: any) => {
+const updateCategory = async (req: any) => {
+  const { id } = req.params;
+  const file = req.file;
+  const payload = req.body;
+
+  if (file) {
+    const filePath = file.path.replace(/\\/g, "/");
+    const uploaded = await uploadImageToCloudinary(
+      filePath,
+      "categories",
+      "high"
+    );
+    payload.img = uploaded.secure_url;
+
+    try {
+      fs.unlinkSync(file.path);
+    } catch (err) {
+      console.error("Error deleting local file:", err);
+    }
+  }
+
   const result = await Category.findByIdAndUpdate(id, payload, { new: true });
   return result;
 };
