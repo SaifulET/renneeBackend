@@ -3,7 +3,8 @@ import { Model } from "mongoose";
 export interface TContact {
   name: string;
   email: string;
-  question: string;
+  title: string;
+  description: string;
   isDelete?: Boolean;
 }
 

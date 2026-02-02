@@ -20,8 +20,9 @@ const createContactIntoDb = async (
           <h2 style="margin: 0 0 12px;">New Contact Message</h2>
           <p style="margin: 0 0 6px;"><strong>Name:</strong> ${payload.name}</p>
           <p style="margin: 0 0 6px;"><strong>Email:</strong> ${payload.email}</p>
-          <p style="margin: 0 0 6px;"><strong>Question:</strong></p>
-          <p style="margin: 0; white-space: pre-wrap;">${payload.question}</p>
+          <p style="margin: 0 0 6px;"><strong>Title:</strong> ${payload.title}</p>
+          <p style="margin: 0 0 6px;"><strong>Description:</strong></p>
+          <p style="margin: 0; white-space: pre-wrap;">${payload.description}</p>
         </div>
       `;
 
@@ -64,7 +65,7 @@ const all_contact_IntoDb = async (query: Record<string, unknown>) => {
 
 const specificContactIntoDb = async (id: string) => {
   try {
-    return await contacts.findById(id).select("name email question");
+    return await contacts.findById(id).select("name email title description");
   } catch (error: any) {
     throw new AppError(
       error.statusCode || httpStatus.SERVICE_UNAVAILABLE,

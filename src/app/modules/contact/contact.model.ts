@@ -5,7 +5,8 @@ const TcontactSchema = new Schema<TContact, ContactModel>(
   {
     name: { type: String, required: [true, "name is required"] },
     email: { type: String, required: [true, "email is required"] },
-    question: { type: String, required: [true, "question is required"] },
+    title: { type: String, required: [true, "title is required"] },
+    description: { type: String, required: [true, "description is required"] },
     isDelete: {
       type: Boolean,
       required: [false, "delete is not required"],
