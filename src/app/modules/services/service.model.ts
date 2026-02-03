@@ -36,3 +36,22 @@ const ServiceSchema = new Schema<TService, ServiceModel>(
 );
 
 export const Service = model<TService, ServiceModel>("Service", ServiceSchema);
+
+
+
+
+
+// {
+//   "title": "Premium Consultation",
+//   "description": "Expert advice session.",
+//   "category_id": "6980ef0855841f60ccb9bc63",
+//   "consultant_ids": ["6980ef0855841f60ccb9bc63"],
+//   "price": 100,
+//   "duration": 60,
+//   "availability_type": "Both",
+//   "custom_slots": [
+//     { "start_time": "10:00" },
+//     { "start_time": "14:00" }
+//   ],
+//   "weekends": ["Saturday", "Sunday"]
+// }

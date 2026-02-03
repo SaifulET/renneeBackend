@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 import { ServiceService } from "./service.service";
 
 const createService = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.createService(req.body);
+  const result = await ServiceService.createService(req);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
@@ -15,12 +15,13 @@ const createService = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllServices = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.getAllServices();
+  const { meta, data } = await ServiceService.getAllServices(req.query);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Services retrieved successfully",
-    data: result,
+    meta,
+    data,
   });
 });
 
@@ -35,7 +36,7 @@ const getServiceById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateService = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.updateService(req.params.id, req.body);
+  const result = await ServiceService.updateService(req);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

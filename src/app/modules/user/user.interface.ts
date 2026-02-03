@@ -42,3 +42,48 @@ export interface UserModel extends Model<TUser> {
 }
 
 export type TUserRole = keyof typeof USER_ROLE;
+
+
+
+
+// {
+//   "email": "parvesmosarof32@gmail.com",
+//   "auth_type": "email",
+//   "createdAt": "2026-01-27T19:16:52.535+00:00",
+//   "fcm": null,
+//   "fullname": "Super Admin",
+//   "isDelete": false,
+//   "isStripeConnected": false,
+//   "isVerify": true,
+//   "password": "$2a$12$NjfyNKCKWgTotxcyGXCcwOwvmf91bHSxgYzGQK83pVDsi51mDA.OO",
+//   "photo": null,
+//   "photoPublicId": null,
+//   "role": "admin",
+//   "status": "isProgress",
+//   "updatedAt": "2026-02-02T22:41:22.472+00:00",
+//   "phoneNumber": "01722305054",
+//   "address": "123 Main Street, New York, NY, USA",
+//   "gender": "Male"
+// }
+
+
+
+// {
+//   "email": "parvesmosarof32@gmail.com",
+//   "auth_type": "email",
+//   "createdAt": "2026-01-27T19:16:52.535+00:00",
+//   "fcm": null,
+//   "fullname": "Super Admin",
+//   "isDelete": false,
+//   "isStripeConnected": false,
+//   "isVerify": true,
+//   "password": "$2a$12$NjfyNKCKWgTotxcyGXCcwOwvmf91bHSxgYzGQK83pVDsi51mDA.OO",
+//   "photo": null,
+//   "photoPublicId": null,
+//   "role": "consultant",
+//   "status": "isProgress",
+//   "updatedAt": "2026-02-02T22:41:22.472+00:00",
+//   "phoneNumber": "01722305054",
+//   "address": "123 Main Street, New York, NY, USA",
+//   "gender": "Male"
+// }
