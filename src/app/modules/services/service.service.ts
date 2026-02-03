@@ -33,6 +33,15 @@ const getAllServices = async (query: Record<string, unknown>) => {
 
   const filter: Record<string, unknown> = {};
 
+  if (queryObj.searchTerm) {
+    const searchTerm = queryObj.searchTerm as string;
+    const searchRegex = new RegExp(searchTerm, "i");
+    filter.$or = [
+      { title: searchRegex },
+      { description: searchRegex },
+    ];
+  }
+
   if (queryObj.category_id) {
     filter.category_id = queryObj.category_id;
   }
