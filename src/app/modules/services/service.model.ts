@@ -3,8 +3,8 @@ import { ServiceModel, TService } from "./service.interface";
 
 const ServiceSchema = new Schema<TService, ServiceModel>(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
+    title: { type: String, required: true, index: true },
+    description: { type: String, required: true, index: true },
     category_id: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     price: { type: Number, required: true },
     duration: { type: Number, required: true }, // in minutes

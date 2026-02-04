@@ -7,6 +7,7 @@ import { DiscountValidation } from './discount.validation';
 
 const router = express.Router();
 
+// /api/v1/discounts/creatediscount
 router.post(
     '/creatediscount',
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),

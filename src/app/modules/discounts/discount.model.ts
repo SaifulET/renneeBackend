@@ -7,6 +7,10 @@ const DiscountSchema = new Schema<TDiscount, DiscountModel>(
             type: String,
             required: [true, 'Discount title is required'],
         },
+        description: {
+            type: String,
+            required: [true, 'Discount description is required'],
+        },
         percentage: {
             type: Number,
             required: [true, 'Discount percentage is required'],

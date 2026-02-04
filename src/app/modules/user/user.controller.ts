@@ -91,6 +91,17 @@ const recently_joined_user: RequestHandler = catchAsync(async (req, res) => {
 
 });
 
+const getAllConsult: RequestHandler = catchAsync(async (req, res) => {
+  const { meta, data } = await UserServices.getAllConsultIntoDb(req.query);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Retrieved Consultants",
+    meta,
+    data,
+  });
+});
+
 const deleteAllTypesOfUser: RequestHandler = catchAsync(async (req, res) => {
 
   const result = await UserServices.deleteAllTypesOfUserIntoDb(req.params.id);
@@ -111,7 +122,8 @@ const UserController = {
   resetPassword,
   getUserGrowth,
   recently_joined_user,
-  deleteAllTypesOfUser
+  deleteAllTypesOfUser,
+  getAllConsult,
 };
 
 export default UserController;

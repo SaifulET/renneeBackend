@@ -540,6 +540,30 @@ const recently_joined_user_IntoDb = async (query: Record<string, unknown> = {}) 
 
 
 
+const getAllConsultIntoDb = async (query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 100;
+  const skip = (page - 1) * limit;
+
+  const result = await users.find({ role: USER_ROLE.consultant })
+    .skip(skip)
+    .limit(limit)
+    .select('fullname photo phoneNumber email createdAt');
+
+  const total = await users.countDocuments({ role: USER_ROLE.consultant });
+  const totalPage = Math.ceil(total / limit);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage,
+    },
+    data: result,
+  };
+};
+
 const deleteAllTypesOfUserIntoDb = async (id: string) => {
 
   try {
@@ -572,6 +596,7 @@ const UserServices = {
   resetPasswordIntoDb,
   getUserGrowthIntoDb,
   recently_joined_user_IntoDb,
-  deleteAllTypesOfUserIntoDb
+  deleteAllTypesOfUserIntoDb,
+  getAllConsultIntoDb,
 };
 export default UserServices;

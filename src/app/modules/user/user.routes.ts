@@ -15,6 +15,12 @@ router.post(
   UserController.createUser
 );
 
+// /api/v1/user/getallconsult
+router.get(
+  "/getallconsult",
+  UserController.getAllConsult
+);
+
 router.patch(
   "/user_verification",
   validationRequest(UserValidationSchema.UserVerification),
