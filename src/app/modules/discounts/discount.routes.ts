@@ -15,6 +15,7 @@ router.post(
     DiscountController.createDiscount,
 );
 
+// /api/v1/discounts/getalldiscounts
 router.get('/getalldiscounts', DiscountController.getAllDiscounts);
 
 router.get('/getdiscount/:id', DiscountController.getDiscountById);

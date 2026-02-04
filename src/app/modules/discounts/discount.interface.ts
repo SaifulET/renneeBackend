@@ -3,6 +3,7 @@ import { Model } from 'mongoose';
 export interface TDiscount {
     title: string;
     description: string;
+    useablecode: string;
     percentage: number;
     isActive: boolean;
     isDelete: boolean;
@@ -17,6 +18,7 @@ export interface DiscountModel extends Model<TDiscount> {
 // {
 //     "title": "",
 //     "description": "",
+//     "useablecode": "",
 //     "percentage": 0,
 
 // }
