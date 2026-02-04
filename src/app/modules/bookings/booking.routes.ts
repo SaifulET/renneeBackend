@@ -5,22 +5,61 @@ import { USER_ROLE } from "../user/user.constant";
 
 const router = express.Router();
 
+// /api/v1/bookings/availability
 router.get(
   "/availability",
   // auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin), // Public or Protected? User needs to see availability
   BookingController.checkAvailability
 );
 
+// /api/v1/bookings/initiate
+
+// body 
+// {
+//   "serviceId": "693354569657948948948948",
+//   "slot_time": "10:00",
+//   "date": "2022-01-01",
+//   "user": from authorization token,
+//   "discountCode": "DISCOUNT10", 
+//   "user_details": {
+//     "name": "John Doe",
+//     "email": "[EMAIL_ADDRESS]",
+//     "phone": "1234567890"
+//   },
+//   "meeting_type": "video",
+//   "consultant": "693354569657948948948948"
+// }
 router.post(
   "/initiate",
-  auth(USER_ROLE.buyer, USER_ROLE.admin),
+  auth(USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.consultant, USER_ROLE.superAdmin),
   BookingController.initiateBooking
 );
 
+// /api/v1/bookings/confirm
 router.post(
   "/confirm",
-  auth(USER_ROLE.buyer, USER_ROLE.admin),
+  auth(USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.consultant, USER_ROLE.superAdmin),
   BookingController.confirmBooking
+);
+
+// /api/v1/bookings/webhookverify
+router.post(
+  "/webhookverify",
+  BookingController.webhookVerify
+);
+
+// /api/v1/bookings/my-bookings?status=completed or ongoing or cancled
+router.get(
+  "/my-bookings",
+  auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingController.getMyPaidBookings
+);
+
+// /api/v1/bookings/cancel/:id
+router.patch(
+  "/cancel/:id",
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingController.cancelBooking
 );
 
 export const BookingRoutes = router;

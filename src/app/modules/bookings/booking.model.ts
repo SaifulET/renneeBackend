@@ -16,12 +16,15 @@ const BookingSchema = new Schema<TBooking, BookingModel>(
     slot_time: { type: String, required: true }, // "HH:mm"
     meeting_type: {
       type: String,
-      enum: ["Online", "Offline"],
+      enum: {
+        values: ["Online", "Offline", "Both"],
+        message: "{VALUE} is not a valid meeting type. Allowed values are: Online, Offline, Both"
+      },
       required: true,
     },
     payment_status: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: ["Pending", "Paid", "Failed", "Cancelled"],
       default: "Pending",
     },
     transaction_id: { type: String },

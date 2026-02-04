@@ -14,8 +14,8 @@ export interface TBooking {
     user_details?: TBookingUserDetails;
     date: Date;
     slot_time: string;
-    meeting_type: "Online" | "Offline";
-    payment_status: "Pending" | "Paid" | "Failed";
+    meeting_type: "Online" | "Offline" | "Both";
+    payment_status: "Pending" | "Paid" | "Failed" | "Cancelled";
     transaction_id?: string;
 }
 

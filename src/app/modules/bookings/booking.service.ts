@@ -6,6 +6,8 @@ import { Service } from "../services/service.model";
 import { PaymentHelper } from "../../utils/payment.helper";
 import { sendPushNotification } from "../../utils/notification.helper";
 import users from "../user/user.model";
+import { Discount } from "../discounts/discount.model";
+import mongoose from "mongoose";
 
 const checkAvailability = async (serviceId: string, date: string, consultantId: string) => {
   const service = await Service.findById(serviceId);
@@ -26,7 +28,7 @@ const checkAvailability = async (serviceId: string, date: string, consultantId: 
       $gte: start,
       $lte: end,
     },
-    payment_status: { $ne: "Failed" }, // Exclude failed? Or only Paid/Pending
+    payment_status: "Paid",
   }).select("slot_time");
 
   const bookedTimes = existingBookings.map((b) => b.slot_time);
@@ -45,17 +47,253 @@ const checkAvailability = async (serviceId: string, date: string, consultantId: 
 
 
 
-const initiateBooking = async (serviceId: string) => {
+const initiateBooking = async (payload: {
+  serviceId: string;
+  slot_time: string;
+  date: string;
+  user: string; // User ID
+  discountCode?: string;
+  user_details?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  meeting_type: string;
+  consultant: string;
+}) => {
+  const { serviceId, slot_time, date, user, discountCode, user_details, meeting_type, consultant } = payload;
+
   const service = await Service.findById(serviceId);
   if (!service) {
     throw new AppError(httpStatus.NOT_FOUND, "Service not found", "");
   }
-  const paymentIntent = await PaymentHelper.createPaymentIntent(service.price);
+
+  // Check availability
+  const availableSlots = await checkAvailability(serviceId, date, consultant);
+  const isAvailable = availableSlots.some((slot: any) => slot.start_time === slot_time);
+
+  if (!isAvailable) {
+    throw new AppError(httpStatus.CONFLICT, "Slot already booked", "");
+  }
+
+  let finalPrice = service.price;
+  let discountId = null;
+
+  if (discountCode) {
+    const discount = await Discount.findOne({ useablecode: discountCode, isActive: true, isDelete: false });
+    if (!discount) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Invalid or expired discount code", "");
+    }
+    // Calculate discount
+    const discountAmount = (service.price * discount.percentage) / 100;
+    finalPrice = service.price - discountAmount;
+    discountId = discount._id;
+  }
+
+  // Create Pending Booking
+  const booking = await Booking.create({
+    user,
+    service: serviceId,
+    consultant,
+    discount: discountId, // Optional
+    user_details,
+    date,
+    slot_time,
+    meeting_type,
+    payment_status: "Pending",
+  });
+
+  // Create Stripe Checkout Session
+  const session = await PaymentHelper.createCheckoutSession({
+    productName: service.title,
+    description: `Booking for ${service.title} at ${slot_time} on ${date}`,
+    amount: finalPrice,
+    metadata: {
+      bookingId: booking._id.toString(),
+      userId: user,
+      serviceId: serviceId,
+      consultantId: consultant,
+      slot_time: slot_time,
+      date: date
+    }, // Add necessary metadata
+    customerEmail: user_details?.email // Optional
+  });
+
+  // Save session ID as transaction_id (optional, useful for tracking)
+  booking.transaction_id = session.id;
+  await booking.save();
+
   return {
-    clientSecret: paymentIntent.client_secret,
-    transactionId: paymentIntent.id,
+    paymentUrl: session.url,
+    bookingId: booking._id
   };
 };
+
+const webhookVerify = async (event: any) => {
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const bookingId = session.metadata?.bookingId;
+
+    if (!bookingId) {
+      console.error("No bookingId in session metadata");
+      return;
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      console.error("Booking not found");
+      return;
+    }
+
+    if (booking.payment_status === 'Paid') {
+      return; // Already processed
+    }
+
+    booking.payment_status = 'Paid';
+    booking.transaction_id = session.id;
+    await booking.save();
+
+    // --- logic from confirmBooking start ---
+    const serviceId = booking.service.toString();
+    const service = await Service.findById(serviceId);
+    if (service) {
+      const bookingDate = new Date(booking.date);
+
+      let slotEntry = service.unavailable_slots_of_date.find(
+        (entry) => new Date(entry.date).toDateString() === bookingDate.toDateString()
+      );
+
+      if (slotEntry) {
+        if (!slotEntry.slots.includes(booking.slot_time)) {
+          slotEntry.slots.push(booking.slot_time);
+        }
+      } else {
+        service.unavailable_slots_of_date.push({
+          date: bookingDate,
+          slots: [booking.slot_time]
+        });
+        slotEntry = service.unavailable_slots_of_date[service.unavailable_slots_of_date.length - 1];
+      }
+
+      const totalSlots = service.custom_slots.length;
+
+      if (slotEntry && slotEntry.slots.length >= totalSlots) {
+        const isDateUnavailable = service.unavailable_dates.some(
+          (d) => new Date(d).toDateString() === bookingDate.toDateString()
+        );
+        if (!isDateUnavailable) {
+          service.unavailable_dates.push(bookingDate);
+        }
+      }
+      await service.save();
+    }
+
+    // Send Notifications
+    const consultantId = booking.consultant.toString();
+    const userId = booking.user.toString();
+
+    const consultant = await users.findById(consultantId);
+    const user = await users.findById(userId);
+
+    if (consultant?.fcm) {
+      await sendPushNotification(
+        consultant.fcm,
+        "New Booking Confirmed",
+        `You have a new booking with ${user?.fullname || "a client"} at ${booking.slot_time}`
+      );
+    }
+
+    if (user?.fcm) {
+      await sendPushNotification(
+        user.fcm,
+        "Booking Confirmed",
+        `Your booking for ${booking.slot_time} is confirmed.`
+      );
+    }
+    // --- logic from confirmBooking end ---
+  }
+};
+
+const getMyPaidBookings = async (userId: string, query: Record<string, unknown>) => {
+  const { status } = query;
+  const matchQuery: any = { user: userId };
+
+  const currentDate = new Date();
+
+  if (status === 'completed') {
+    matchQuery.payment_status = "Paid";
+    matchQuery.date = { $lt: currentDate };
+  } else if (status === 'ongoing') {
+    matchQuery.payment_status = "Paid";
+    matchQuery.date = { $gte: currentDate };
+  } else if (status === 'cancelled') {
+    matchQuery.payment_status = "Cancelled";
+  } else {
+    // Default: return all Paid and Cancelled? or just Paid?
+    // Previous behavior was only Paid. User might want to see history.
+    // Let's return Paid and Cancelled if no specific status, or just Paid. 
+    // Given the prompt "my-bookings?status=...", I will default to Paid if no status, 
+    // but the UI might send status.
+    matchQuery.payment_status = "Paid";
+  }
+
+  const result = await Booking.find(matchQuery)
+    .populate('service')
+    .populate('consultant')
+    .populate('discount');
+  return result;
+}
+
+const cancelBooking = async (id: string) => {
+  const booking = await Booking.findById(id);
+  if (!booking) {
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found", "");
+  }
+
+  booking.payment_status = "Cancelled";
+  await booking.save();
+
+  // Optional: Free up the slot?
+  // If it was Paid, the slot was blocked in Service.
+  // We should probably remove it from Service.unavailable_slots_of_date
+  // Implementation for unblocking slot:
+  const serviceId = booking.service.toString();
+  const service = await Service.findById(serviceId);
+  if (service) {
+    const bookingDate = new Date(booking.date);
+    const slotEntry = service.unavailable_slots_of_date.find(
+      (entry) => new Date(entry.date).toDateString() === bookingDate.toDateString()
+    );
+    if (slotEntry) {
+      slotEntry.slots = slotEntry.slots.filter(s => s !== booking.slot_time);
+      // If slots empty, remove the entry? check logic
+      // also check unavailable_dates
+      if (slotEntry.slots.length === 0) {
+        service.unavailable_slots_of_date = service.unavailable_slots_of_date.filter(
+          (entry) => new Date(entry.date).toDateString() !== bookingDate.toDateString()
+        );
+        // remove from unavailable_dates
+        service.unavailable_dates = service.unavailable_dates.filter(
+          d => new Date(d).toDateString() !== bookingDate.toDateString()
+        );
+      } else {
+        // Check if it was full and now isn't
+        // Simply re-evaluating fullness might be complex, 
+        // but removing from unavailable_dates is safe if we know it's not full anymore.
+        // If we perform exact check:
+        const totalSlots = service.custom_slots.length;
+        if (slotEntry.slots.length < totalSlots) {
+          service.unavailable_dates = service.unavailable_dates.filter(
+            d => new Date(d).toDateString() !== bookingDate.toDateString()
+          );
+        }
+      }
+    }
+    await service.save();
+  }
+
+  return booking;
+}
 
 const confirmBooking = async (payload: any) => {
   const { transaction_id, service: serviceId, user: userId, consultant: consultantId } = payload;
@@ -145,5 +383,8 @@ const confirmBooking = async (payload: any) => {
 export const BookingService = {
   checkAvailability,
   initiateBooking,
-  confirmBooking
+  confirmBooking,
+  webhookVerify,
+  getMyPaidBookings,
+  cancelBooking
 };
