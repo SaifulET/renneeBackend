@@ -83,11 +83,26 @@ const getAllServices = async (query: Record<string, unknown>) => {
   const limit = Number(queryObj.limit) || 10;
   const skip = (page - 1) * limit;
 
+  /*
   const result = await Service.find(filter)
     .sort(sort)
     .skip(skip)
     .limit(limit)
     .populate("category_id consultant_ids");
+  */
+
+  // Debugging populate
+  const services = await Service.find(filter)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
+
+  // console.log("Raw Services (Before Populate):", JSON.stringify(services, null, 2));
+
+  const result = await Service.populate(services, [
+    { path: "category_id" },
+    // { path: "consultant_ids" }
+  ]);
 
   const total = await Service.countDocuments(filter);
   const totalPage = Math.ceil(total / limit);
@@ -104,7 +119,7 @@ const getAllServices = async (query: Record<string, unknown>) => {
 };
 
 const getServiceById = async (id: string) => {
-  const result = await Service.findById(id).populate("category_id consultant_ids");
+  const result = await Service.findById(id).populate("category_id");
   return result;
 };
 

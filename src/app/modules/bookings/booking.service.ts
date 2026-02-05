@@ -7,7 +7,29 @@ import { PaymentHelper } from "../../utils/payment.helper";
 import { sendPushNotification } from "../../utils/notification.helper";
 import users from "../user/user.model";
 import { Discount } from "../discounts/discount.model";
-import mongoose from "mongoose";
+import { Conversation } from "../message/message.model";
+
+const getSingleBooking = async (id: string) => {
+  const booking = await Booking.findById(id)
+    .populate("service")
+    .populate("consultant")
+    .populate("user")
+    .populate("discount");
+
+  if (!booking) {
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found", "");
+  }
+
+  // Check for conversation
+  const conversation = await Conversation.findOne({
+    participants: { $all: [booking.user._id, booking.consultant._id] },
+  });
+
+  return {
+    ...booking.toObject(),
+    conversationId: conversation?._id || null,
+  };
+};
 
 const checkAvailability = async (serviceId: string, date: string, consultantId: string) => {
   const service = await Service.findById(serviceId);
@@ -64,6 +86,7 @@ const initiateBooking = async (payload: {
   const { serviceId, slot_time, date, user, discountCode, user_details, meeting_type, consultant } = payload;
 
   const service = await Service.findById(serviceId);
+  
   if (!service) {
     throw new AppError(httpStatus.NOT_FOUND, "Service not found", "");
   }
@@ -386,5 +409,6 @@ export const BookingService = {
   confirmBooking,
   webhookVerify,
   getMyPaidBookings,
-  cancelBooking
+  cancelBooking,
+  getSingleBooking
 };

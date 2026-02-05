@@ -8,6 +8,7 @@ import httpStatus from "http-status";
 
 const router = express.Router();
 
+// /api/v1/services/createService
 router.post(
   "/createService",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
@@ -37,9 +38,10 @@ router.get(
   ServiceController.getServiceById
 );
 
+// /api/v1/services/updateservice/:id
 router.patch(
   "/updateservice/:id",
-  auth(USER_ROLE.admin),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   upload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -56,7 +58,7 @@ router.patch(
 
 router.delete(
   "/deleteservice/:id",
-  auth(USER_ROLE.admin),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   ServiceController.deleteService
 );
 

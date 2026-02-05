@@ -1,4 +1,5 @@
-import { Server } from "http";
+import { Server } from "socket.io";
+import { Server as HttpServer } from "http";
 import mongoose from "mongoose";
 import app from "./app";
 import config from "./app/config";
@@ -8,7 +9,7 @@ import AppError from "./app/errors/AppError";
 
 
 
-let server: Server | null = null;
+let server: HttpServer | null = null;
 
 
 type channelName = string;
@@ -46,11 +47,46 @@ async function main() {
       console.log(` app listening http://${config.host}:${config.port}`);
     });
 
+    // Socket.io setup
+    if (server) {
+      const io = new Server(server, {
+        cors: {
+          origin: "*",
+          methods: ["GET", "POST"],
+        },
+      });
+
+      // Store the io instance globally if needed, or just use it here
+      (global as any).io = io;
+
+      io.on("connection", (socket) => {
+        console.log("A user connected:", socket.id);
+
+        socket.on("join_conversation", (conversationId) => {
+          socket.join(conversationId);
+          console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+        });
+
+        socket.on("send_message", (data) => {
+          // data should contain conversationId
+          if (data.conversationId) {
+            socket.to(data.conversationId).emit("receive_message", data);
+          }
+        });
+
+        socket.on("disconnect", () => {
+          console.log("User disconnected:", socket.id);
+        });
+      });
+    }
 
 
 
 
-  
+
+
+
+
 
 
 

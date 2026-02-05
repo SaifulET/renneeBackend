@@ -8,6 +8,7 @@ import { ServiceRoutes } from "../modules/services/service.routes";
 import SettingsRoutes from "../modules/settings/settings.routres";
 import contactRoutes from "../modules/contact/contact.router";
 import { DiscountRoutes } from "../modules/discounts/discount.routes";
+import { MessageRoutes } from "../modules/message/message.routes";
 
 
 const router = express.Router();
@@ -44,6 +45,10 @@ const moduleRoutes = [
   {
     path: "/discounts",
     route: DiscountRoutes,
+  },
+  {
+    path: "/message",
+    route: MessageRoutes,
   },
 ];
 

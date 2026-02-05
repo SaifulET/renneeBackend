@@ -19,7 +19,6 @@ router.get(
 //   "serviceId": "693354569657948948948948",
 //   "slot_time": "10:00",
 //   "date": "2022-01-01",
-//   "user": from authorization token,
 //   "discountCode": "DISCOUNT10", 
 //   "user_details": {
 //     "name": "John Doe",
@@ -27,8 +26,9 @@ router.get(
 //     "phone": "1234567890"
 //   },
 //   "meeting_type": "video",
-//   "consultant": "693354569657948948948948"
+//   "consultant": "69827149c64b011d4f5d17ef"
 // }
+
 router.post(
   "/initiate",
   auth(USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.consultant, USER_ROLE.superAdmin),
@@ -53,6 +53,13 @@ router.get(
   "/my-bookings",
   auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
   BookingController.getMyPaidBookings
+);
+
+// /api/v1/bookings/my-bookings/:id
+router.get(
+  "/my-bookings/:id",
+  auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingController.getSingleBooking
 );
 
 // /api/v1/bookings/cancel/:id
