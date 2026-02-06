@@ -86,7 +86,6 @@ const initiateBooking = async (payload: {
   const { serviceId, slot_time, date, user, discountCode, user_details, meeting_type, consultant } = payload;
 
   const service = await Service.findById(serviceId);
-  
   if (!service) {
     throw new AppError(httpStatus.NOT_FOUND, "Service not found", "");
   }
@@ -113,6 +112,17 @@ const initiateBooking = async (payload: {
     discountId = discount._id;
   }
 
+  // Find or Create Conversation
+  let conversation = await Conversation.findOne({
+    participants: { $all: [user, consultant] },
+  });
+
+  if (!conversation) {
+    conversation = await Conversation.create({
+      participants: [user, consultant],
+    });
+  }
+
   // Create Pending Booking
   const booking = await Booking.create({
     user,
@@ -124,6 +134,7 @@ const initiateBooking = async (payload: {
     slot_time,
     meeting_type,
     payment_status: "Pending",
+    conversation: conversation._id,
   });
 
   // Create Stripe Checkout Session
@@ -262,8 +273,8 @@ const getMyPaidBookings = async (userId: string, query: Record<string, unknown>)
 
   const result = await Booking.find(matchQuery)
     .populate('service')
-    .populate('consultant')
-    .populate('discount');
+    // .populate('consultant')
+    // .populate('discount');
   return result;
 }
 

@@ -28,6 +28,7 @@ const BookingSchema = new Schema<TBooking, BookingModel>(
       default: "Pending",
     },
     transaction_id: { type: String },
+    conversation: { type: Schema.Types.ObjectId, ref: "Conversation" },
   },
   {
     timestamps: true,

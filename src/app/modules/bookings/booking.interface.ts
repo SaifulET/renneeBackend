@@ -17,6 +17,7 @@ export interface TBooking {
     meeting_type: "Online" | "Offline" | "Both";
     payment_status: "Pending" | "Paid" | "Failed" | "Cancelled";
     transaction_id?: string;
+    conversation?: Types.ObjectId;
 }
 
 export interface BookingModel extends Model<TBooking> { }
