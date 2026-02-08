@@ -55,10 +55,21 @@ const deleteService = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getFeaturedServices = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceService.getFeaturedServices();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Featured services retrieved successfully",
+    data: result,
+  });
+});
+
 export const ServiceController = {
   createService,
   getAllServices,
   getServiceById,
   updateService,
   deleteService,
+  getFeaturedServices,
 };

@@ -28,6 +28,7 @@ const ServiceSchema = new Schema<TService, ServiceModel>(
       },
     ],
     consultant_ids: [{ type: Schema.Types.ObjectId, ref: "users" }],
+    isFeatured: { type: Boolean, default: false },
   },
   {
     timestamps: true,

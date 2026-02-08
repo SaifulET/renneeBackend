@@ -90,6 +90,12 @@ const initiateBooking = async (payload: {
     throw new AppError(httpStatus.NOT_FOUND, "Service not found", "");
   }
 
+  // Check if slot exists in service
+  const isValidSlot = service.custom_slots.some((slot: any) => slot.start_time === slot_time);
+  if (!isValidSlot) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Slot is not available or missing", "");
+  }
+
   // Check availability
   const availableSlots = await checkAvailability(serviceId, date, consultant);
   const isAvailable = availableSlots.some((slot: any) => slot.start_time === slot_time);
@@ -273,8 +279,8 @@ const getMyPaidBookings = async (userId: string, query: Record<string, unknown>)
 
   const result = await Booking.find(matchQuery)
     .populate('service')
-    // .populate('consultant')
-    // .populate('discount');
+  // .populate('consultant')
+  // .populate('discount');
   return result;
 }
 

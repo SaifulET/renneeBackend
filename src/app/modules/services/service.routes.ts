@@ -31,6 +31,12 @@ router.get(
   ServiceController.getAllServices
 );
 
+// /api/v1/services/getfeaturedservices
+router.get(
+  "/getfeaturedservices",
+  ServiceController.getFeaturedServices
+);
+
 
 
 router.get(

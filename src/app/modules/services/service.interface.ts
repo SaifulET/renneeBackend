@@ -18,6 +18,7 @@ export interface TService {
     unavailable_slots_of_date: TUnavailableSlot[];
     custom_slots: { start_time: string }[];
     consultant_ids: Types.ObjectId[];
+    isFeatured: boolean;
 }
 
 export interface ServiceModel extends Model<TService> { }

@@ -153,10 +153,21 @@ const deleteService = async (id: string) => {
   return result;
 };
 
+const getFeaturedServices = async () => {
+  const result = await Service.find({ isFeatured: true })
+    .populate("category_id")
+    .populate({
+      path: "consultant_ids",
+      select: "name email image role _id",
+    });
+  return result;
+};
+
 export const ServiceService = {
   createService,
   getAllServices,
   getServiceById,
   updateService,
   deleteService,
+  getFeaturedServices,
 };
