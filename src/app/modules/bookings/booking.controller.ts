@@ -66,12 +66,13 @@ const webhookVerify = catchAsync(async (req: Request, res: Response) => {
 
 const getMyPaidBookings = catchAsync(async (req: Request, res: Response) => {
   const user = req.user.id;
-  const result = await BookingService.getMyPaidBookings(user, req.query);
+  const { meta, data } = await BookingService.getMyPaidBookings(user, req.query);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Paid bookings retrieved successfully",
-    data: result,
+    meta,
+    data,
   });
 });
 

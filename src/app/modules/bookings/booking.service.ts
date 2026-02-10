@@ -255,33 +255,54 @@ const webhookVerify = async (event: any) => {
 };
 
 const getMyPaidBookings = async (userId: string, query: Record<string, unknown>) => {
-  const { status } = query;
+  const { filter, page = 1, limit = 10 } = query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
   const matchQuery: any = { user: userId };
 
-  const currentDate = new Date();
+  // Use start of today to ensure "ongoing" includes bookings later today
+  // and "completed" includes strictly past days.
+  const currentDate = startOfDay(new Date());
 
-  if (status === 'completed') {
+  if (filter === 'completed') {
     matchQuery.payment_status = "Paid";
     matchQuery.date = { $lt: currentDate };
-  } else if (status === 'ongoing') {
+  } else if (filter === 'ongoing') {
     matchQuery.payment_status = "Paid";
     matchQuery.date = { $gte: currentDate };
-  } else if (status === 'cancelled') {
-    matchQuery.payment_status = "Cancelled";
   } else {
-    // Default: return all Paid and Cancelled? or just Paid?
-    // Previous behavior was only Paid. User might want to see history.
-    // Let's return Paid and Cancelled if no specific status, or just Paid. 
-    // Given the prompt "my-bookings?status=...", I will default to Paid if no status, 
-    // but the UI might send status.
+    // Default behavior if no filter is provided: Return all Paid bookings
     matchQuery.payment_status = "Paid";
   }
 
+  const total = await Booking.countDocuments(matchQuery);
+  const totalPage = Math.ceil(total / limitNumber);
+
   const result = await Booking.find(matchQuery)
-    .populate('service')
-  // .populate('consultant')
-  // .populate('discount');
-  return result;
+    .populate({
+      path: 'service',
+      select: 'title description price imgs availability_type duration'
+    })
+    .populate({
+      path: 'consultant',
+      select: 'name email phone images'
+    })
+    .sort({ date: 1, slot_time: 1 }) // Sort by date ascending
+    .skip(skip)
+    .limit(limitNumber);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage
+    },
+    data: result
+  };
 }
 
 const cancelBooking = async (id: string) => {

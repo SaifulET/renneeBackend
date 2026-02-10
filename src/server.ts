@@ -6,6 +6,8 @@ import config from "./app/config";
 
 import httpStatus from "http-status";
 import AppError from "./app/errors/AppError";
+import { MessageService } from "./app/modules/message/message.service";
+import { Conversation } from "./app/modules/message/message.model";
 
 
 
@@ -62,15 +64,68 @@ async function main() {
       io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
 
-        socket.on("join_conversation", (conversationId) => {
+        socket.on("join_conversation", (data) => {
+          // data should be { conversationid, myuserid }
+          // Case-insensitive handling or strict? User asked for specific keys.
+          // Let's support the user's request.
+          const conversationId = data?.conversationId || data?.conversationid;
+          const userId = data?.myUserId || data?.myuserid;
+
+          if (!conversationId || !userId) {
+            console.log(`Join failed: Missing conversationId or myuserId for socket ${socket.id}`);
+            socket.emit("error", { message: "conversationid and myuserid are required to join" });
+            return;
+          }
+
           socket.join(conversationId);
-          console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+          console.log(`User ${userId} (Socket: ${socket.id}) joined conversation: ${conversationId}`);
+
+          // Emit confirmation back to the user
+          socket.emit("join_confirmation", {
+            success: true,
+            message: `Successfully joined conversation ${conversationId}`,
+            conversationId,
+            userId
+          });
         });
 
-        socket.on("send_message", (data) => {
+        socket.on("send_message", async (data) => {
           // data should contain conversationId
-          if (data.conversationId) {
-            socket.to(data.conversationId).emit("receive_message", data);
+          try {
+
+
+            console.log("send_message", data)
+
+            if (data.conversationId) {
+
+
+              // If the message needs to be persisted:
+              if (data.senderId && data.text) {
+
+
+
+                const isExistReciverId = await Conversation.findOne({ _id: data.conversationId }, {
+                  participants: 1
+                });
+                const receiverId = isExistReciverId?.participants.find((p) => p.toString() !== data.senderId);
+
+
+
+
+                if (receiverId && data.senderId) {
+                  const savedMessage = await MessageService.sendMessage(
+                    data.senderId,
+                    receiverId.toString(),
+                    data.text,
+                    data.images || []
+                  );
+                }
+              }
+              //else {socket.to(data.conversationId).emit("receive_message", data);}
+            }
+          } catch (error: any) {
+            console.error("Socket error processing message:", error);
+            socket.emit("error", { message: error.message || "Failed to process message" });
           }
         });
 

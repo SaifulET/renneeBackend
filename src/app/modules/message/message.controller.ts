@@ -3,15 +3,16 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
 import { MessageService } from "./message.service";
+import AppError from "../../errors/AppError";
 
 import { uploadImageToCloudinary } from "../../utils/cloudinary";
 import fs from "fs";
 
 const sendMessage = catchAsync(async (req: Request, res: Response) => {
-    const { receiverId } = req.params;
+    const { conversationId } = req.params;
     const { text } = req.body;
     const user = (req as any).user;
-    const senderId = user.userId;
+    const senderId = user.id;
 
     let imageUrls: string[] = [];
 
@@ -31,14 +32,20 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
                 fs.unlinkSync(file.path);
             } catch (error) {
                 console.error("Error uploading image:", error);
-                // Proceed or throw error? For now proceeded.
             }
         }
     }
 
-    const result = await MessageService.sendMessage(
+    // Prioritize conversationId from params, then body
+    const targetConversationId = conversationId || req.body.conversationId;
+
+    if (!targetConversationId) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Conversation ID is required");
+    }
+
+    const result = await MessageService.sendMessageToConversation(
+        targetConversationId,
         senderId,
-        receiverId,
         text,
         imageUrls
     );
@@ -54,21 +61,22 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
 const getConversation = catchAsync(async (req: Request, res: Response) => {
     const { receiverId } = req.params;
     const user = (req as any).user;
-    const userId = user.userId;
+    const userId = user.id;
 
-    const result = await MessageService.getConversation(userId, receiverId);
+    const result = await MessageService.getConversation(userId, receiverId, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Conversation retrieved successfully",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 
 const getChatList = catchAsync(async (req: Request, res: Response) => {
     const user = (req as any).user;
-    const userId = user.userId;
+    const userId = user.id;
 
     const result = await MessageService.getChatList(userId);
 

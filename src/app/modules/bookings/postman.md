@@ -85,3 +85,55 @@ This backend supports real-time messaging via Socket.IO.
 **Method**: Use the REST API `POST /send-message/:receiverId`.
 **Behavior**: The server will automatically emit `receive_message` to the socket room (conversationId) after saving the message to the database. You generally do not need to emit a socket event to send; just use the API.
 
+
+
+
+
+
+
+
+
+
+
+
+
+Postman Chat Testing Guide
+Follow these steps to test real-time chat using Postman.
+
+Prerequisites
+Ensure your backend server is running (e.g., http://localhost:5000).
+Have the conversationId ready (e.g., 6985233924886c66d447f144).
+Have the receiverId ready (e.g., 69827149c64b011d4f5d17ef for Consultant).
+Step 1: Connect to Socket.IO
+Open Postman.
+Click New (top left) -> Socket.IO Request.
+Enter the server URL: ws://localhost:5000 (Replace port if different).
+Click Connect.
+You should see "Connected" in green.
+Step 2: Join the Conversation
+In the Message tab of your Socket.IO request:
+Event Name: join_conversation
+Argument: 6985233924886c66d447f144 (Paste your conversationId here as a string, or JSON string "6985233924886c66d447f144" depending on Postman version, usually just the value in the text box details).
+Tip: If Postman asks for format, select JSON and try "6985233924886c66d447f144".
+Click Send.
+Check your server terminal; it should log: User <socketId> joined conversation: ...
+Step 3: Listen for Messages
+In the Events tab (or just observe the log in the Socket.IO window):
+Ensure Listen is active (usually strictly automatic in Postman for all events, or you can add a listener for receive_message).
+You are now ready to receive messages.
+Step 4: Send a Message (via REST API)
+Open a new tab in Postman (HTTP Request).
+Method: POST
+URL: http://localhost:5000/api/v1/message/send-message/69827149c64b011d4f5d17ef (Replace with actual receiverId).
+Headers:
+Authorization: Bearer <YOUR_ACCESS_TOKEN>
+Content-Type: application/json
+Body (JSON):
+json
+{
+  "text": "Hello from Postman!"
+}
+Click Send.
+Step 5: Verify
+Check the Socket.IO Request tab.
+You should see a new event receive_message appear in the response log with the message details you just sent.
