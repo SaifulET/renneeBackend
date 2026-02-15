@@ -54,7 +54,7 @@ router.patch(
 
 router.delete(
   "/deletecategory/:id",
-  auth(USER_ROLE.admin),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   CategoryController.deleteCategory
 );
 

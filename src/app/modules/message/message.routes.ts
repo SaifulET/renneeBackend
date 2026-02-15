@@ -8,7 +8,7 @@ import upload from "../../utils/uploadFile";
 const router = express.Router();
 
 router.post(
-    "/send-message/:conversationId?",
+    ["/send-message", "/send-message/:conversationId"],
     auth(
         USER_ROLE.superAdmin,
         USER_ROLE.admin,

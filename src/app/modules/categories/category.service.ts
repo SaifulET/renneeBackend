@@ -1,6 +1,7 @@
 import { Category } from "./category.model";
 import { uploadImageToCloudinary } from "../../utils/cloudinary";
 import fs from "fs";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const createCategory = async (req: any) => {
   const file = req.file;
@@ -26,9 +27,21 @@ const createCategory = async (req: any) => {
   return result;
 };
 
-const getAllCategories = async () => {
-  const result = await Category.find();
-  return result;
+const getAllCategories = async (query: Record<string, unknown>) => {
+  const categoryQuery = new QueryBuilder(Category.find(), query)
+    .search(["name"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await categoryQuery.modelQuery;
+  const meta = await categoryQuery.countTotal();
+
+  return {
+    meta,
+    result,
+  };
 };
 
 const getCategoryById = async (id: string) => {
