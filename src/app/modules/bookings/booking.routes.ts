@@ -35,6 +35,20 @@ router.post(
   BookingController.initiateBooking
 );
 
+router.get(
+  "/get_all_booked_data_for_admin",
+  auth( USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingController.getAllBookedDataForAdmin
+);
+
+router.get(
+  "/get_all_booked_data_for_consultant",
+  auth( USER_ROLE.admin, USER_ROLE.consultant, USER_ROLE.superAdmin),
+  BookingController.getAllBookedDataForConsultant
+);
+
+
+
 // /api/v1/bookings/confirm
 router.post(
   "/confirm",

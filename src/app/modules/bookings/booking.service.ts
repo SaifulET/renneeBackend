@@ -441,6 +441,122 @@ const confirmBooking = async (payload: any) => {
   return booking;
 };
 
+const getAllBookedDataForAdmin = async (query: Record<string, unknown>) => {
+  const { filter, page = 1, limit = 10, status, date, consultant, consultantid } = query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const matchQuery: any = {};
+
+  // Filter by payment status
+  if (status) {
+    matchQuery.payment_status = status;
+  }
+
+  // Filter by date
+  if (date) {
+    const queryDate = new Date(date as string);
+    const start = startOfDay(queryDate);
+    const end = endOfDay(queryDate);
+    matchQuery.date = { $gte: start, $lte: end };
+  }
+
+  // Filter by consultant (support both 'consultant' and 'consultantid' parameters)
+  const consultantId = consultant || consultantid;
+  if (consultantId) {
+    matchQuery.consultant = consultantId;
+  }
+
+  const total = await Booking.countDocuments(matchQuery);
+  const totalPage = Math.ceil(total / limitNumber);
+
+  const result = await Booking.find(matchQuery)
+    .populate({
+      path: 'service',
+      select: 'title description price imgs availability_type duration'
+    })
+    .populate({
+      path: 'consultant',
+      select: 'name email phone images'
+    })
+    .populate({
+      path: 'user',
+      select: 'name email phone images'
+    })
+    .populate({
+      path: 'discount',
+      select: 'percentage useablecode'
+    })
+    .sort({ date: -1, slot_time: -1 }) // Sort by date descending (most recent first)
+    .skip(skip)
+    .limit(limitNumber);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage
+    },
+    data: result
+  };
+};
+
+const getAllBookedDataForConsultant = async (consultantId: string, query: Record<string, unknown>) => {
+  const { filter, page = 1, limit = 10, status, date } = query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const matchQuery: any = { consultant: consultantId };
+
+  // Filter by payment status
+  if (status) {
+    matchQuery.payment_status = status;
+  }
+
+  // Filter by date
+  if (date) {
+    const queryDate = new Date(date as string);
+    const start = startOfDay(queryDate);
+    const end = endOfDay(queryDate);
+    matchQuery.date = { $gte: start, $lte: end };
+  }
+
+  const total = await Booking.countDocuments(matchQuery);
+  const totalPage = Math.ceil(total / limitNumber);
+
+  const result = await Booking.find(matchQuery)
+    .populate({
+      path: 'service',
+      select: 'title description price imgs availability_type duration'
+    })
+    .populate({
+      path: 'user',
+      select: 'name email phone images'
+    })
+    .populate({
+      path: 'discount',
+      select: 'percentage useablecode'
+    })
+    .sort({ date: -1, slot_time: -1 }) // Sort by date descending (most recent first)
+    .skip(skip)
+    .limit(limitNumber);
+
+  return {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPage
+    },
+    data: result
+  };
+};
+
 export const BookingService = {
   checkAvailability,
   initiateBooking,
@@ -448,5 +564,7 @@ export const BookingService = {
   webhookVerify,
   getMyPaidBookings,
   cancelBooking,
-  getSingleBooking
+  getSingleBooking,
+  getAllBookedDataForAdmin,
+  getAllBookedDataForConsultant
 };

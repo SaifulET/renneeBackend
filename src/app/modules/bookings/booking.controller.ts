@@ -108,6 +108,29 @@ const getSingleBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllBookedDataForAdmin = catchAsync(async (req: Request, res: Response) => {
+  const { meta, data } = await BookingService.getAllBookedDataForAdmin(req.query);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "All bookings retrieved successfully for admin",
+    meta,
+    data,
+  });
+});
+
+const getAllBookedDataForConsultant = catchAsync(async (req: Request, res: Response) => {
+  const consultantId = req.user.id;
+  const { meta, data } = await BookingService.getAllBookedDataForConsultant(consultantId, req.query);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "All bookings retrieved successfully for consultant",
+    meta,
+    data,
+  });
+});
+
 export const BookingController = {
   checkAvailability,
   initiateBooking,
@@ -115,5 +138,7 @@ export const BookingController = {
   webhookVerify,
   getMyPaidBookings,
   cancelBooking,
-  getSingleBooking
+  getSingleBooking,
+  getAllBookedDataForAdmin,
+  getAllBookedDataForConsultant
 };
