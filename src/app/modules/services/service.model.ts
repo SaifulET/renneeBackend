@@ -15,13 +15,13 @@ const ServiceSchema = new Schema<TService, ServiceModel>(
       required: true,
     },
     weekends: [{ type: String }], // e.g., ["Saturday", "Sunday"]
-    unavailable_dates: [{ type: Date }],
+    unavailable_dates: [{ type: Date }], // e.g., ["2025-10-25", "2025-10-26"]
     unavailable_slots_of_date: [
       {
         date: { type: Date, required: true },
         slots: [{ type: String }],
       },
-    ],
+    ], // e.g., [{ date: "2025-10-25", slots: ["10:00", "14:00"] }]
     custom_slots: [
       {
         start_time: { type: String, required: true }, // "HH:mm"
