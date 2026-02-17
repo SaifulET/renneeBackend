@@ -9,6 +9,7 @@ import SettingsRoutes from "../modules/settings/settings.routres";
 import contactRoutes from "../modules/contact/contact.router";
 import { DiscountRoutes } from "../modules/discounts/discount.routes";
 import { MessageRoutes } from "../modules/message/message.routes";
+import { DashboardRoutes } from "../modules/dashboardstats/dashboard.router";
 
 
 const router = express.Router();
@@ -50,6 +51,10 @@ const moduleRoutes = [
     path: "/message",
     route: MessageRoutes,
   },
+  {
+    path: "/dashboardstats",
+    route: DashboardRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

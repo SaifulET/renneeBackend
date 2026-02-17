@@ -19,12 +19,6 @@ router.get(
   DashboardControllers.getUserGrowth
 );
 
-// Get recent orders (Admin & Super Admin only)
-router.get(
-  '/recent-orders',
-  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  DashboardControllers.getRecentOrders
-);
 
 // Get recent users (Admin & Super Admin only)
 router.get(

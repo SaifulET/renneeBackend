@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { Conversation, Message } from "./message.model";
 import { Types } from "mongoose";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const sendMessage = async (
     senderId: string,
@@ -144,9 +145,41 @@ const sendMessageToConversation = async (
     return sendMessage(senderId, receiverId.toString(), text, images);
 };
 
+const getConversationMessages = async (conversationId: string, query: Record<string, unknown>) => {
+    // Verify conversation exists
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+        throw new AppError(httpStatus.NOT_FOUND, "Conversation not found");
+    }
+
+    // Use QueryBuilder for pagination and search
+    const messageQuery = new QueryBuilder(
+        Message.find({ conversationId }),
+        query
+    )
+        .search(['text']) // Search in message text
+        .filter()
+        .sort() // Default sort by createdAt
+        .paginate()
+        .fields();
+
+    const messages = await messageQuery.modelQuery
+        .populate('senderId', 'fullname email profile_image')
+        .populate('receiverId', 'fullname email profile_image')
+        .sort({ createdAt: -1 }); // Show newest messages first
+
+    const meta = await messageQuery.countTotal();
+
+    return {
+        meta,
+        data: messages
+    };
+};
+
 export const MessageService = {
     sendMessage,
     getConversation,
     getChatList,
     sendMessageToConversation,
+    getConversationMessages,
 };

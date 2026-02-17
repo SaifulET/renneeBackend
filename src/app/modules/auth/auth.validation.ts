@@ -59,6 +59,18 @@ const changeUserAccountStatus = z.object({
   }),
 });
 
+const googleLoginSchema = z.object({
+  body: z.object({
+    email: z.string({ error: "email is required" }).email(),
+    fullname: z.string({ error: "fullname is required" }).min(1),
+    photo: z.string({ error: "photo is required" }).optional(),
+    role: z.enum(["buyer", "seller"]).default("buyer"),
+    isVerify: z.boolean().default(true),
+    status: z.enum(["isProgress", "Blocked"]).default("isProgress"),
+    isDelete: z.boolean().default(false),
+  }),
+});
+
 const LoginValidationSchema = {
   LoginSchema,
   requestTokenValidationSchema,
@@ -66,5 +78,6 @@ const LoginValidationSchema = {
   resetVerification,
   changeMyProfileSchema,
   changeUserAccountStatus,
+  googleLoginSchema,
 };
 export default LoginValidationSchema;

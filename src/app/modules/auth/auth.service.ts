@@ -422,6 +422,100 @@ const find_by_all_admin_IntoDb = async (
   }
 };
 
+const googleLoginIntoDb = async (payload: {
+  email: string;
+  fullname: string;
+  photo?: string;
+  role: "buyer" | "seller";
+  isVerify: boolean;
+  status: "isProgress" | "Blocked";
+  isDelete: boolean;
+  fcm?: string;
+}) => {
+  try {
+    // Check if user already exists
+    const isUserExist = await users.findOne(
+      {
+        $and: [
+          { email: payload.email },
+          { isDelete: false },
+        ],
+      }
+    );
+
+    let user;
+    
+    if (isUserExist) {
+      // Update existing user with Google data
+      user = await users.findOneAndUpdate(
+        { email: payload.email },
+        {
+          $set: {
+            fullname: payload.fullname,
+            photo: payload.photo,
+            isVerify: payload.isVerify,
+            status: payload.status,
+            fcm: payload?.fcm,
+            lastLoginAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+    } else {
+      // Create new user from Google data
+      const newUser = {
+        id: new mongoose.Types.ObjectId().toString(),
+        email: payload.email,
+        fullname: payload.fullname,
+        photo: payload.photo,
+        role: payload.role,
+        isVerify: payload.isVerify,
+        status: payload.status,
+        isDelete: payload.isDelete,
+        password: "GOOGLE_USER_NO_PASSWORD", // Special password for Google users
+        verificationCode: 0,
+        gender: "Others" as const,
+        fcm: payload?.fcm,
+      };
+
+      
+      const UserModel = users;
+      user = new UserModel(newUser);
+      await user.save();
+    }
+
+    if (!user) {
+      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to process Google login", "");
+    }
+
+    // Generate JWT tokens
+    const jwtPayload = {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+    };
+
+    const accessToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.expires_in as string
+    );
+
+    const refreshToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      config.refresh_expires_in as string
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const AuthServices = {
   loginUserIntoDb,
   refreshTokenIntoDb,
@@ -432,6 +526,7 @@ const AuthServices = {
   isBlockAccountIntoDb,
   find_by_all_admin_IntoDb,
   loginUserViaSocial,
+  googleLoginIntoDb,
 };
 
 export default AuthServices;

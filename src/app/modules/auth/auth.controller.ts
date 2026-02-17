@@ -128,6 +128,24 @@ const loginUserViaSocial: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+const googleLogin: RequestHandler = catchAsync(async (req, res) => {
+  const result = await AuthServices.googleLoginIntoDb(req.body);
+
+  const { refreshToken, accessToken } = result;
+  res.cookie("refreshToken", refreshToken, {
+    secure: config.NODE_ENV === "production",
+    httpOnly: true,
+  });
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Login with Google",
+    data: {
+      accessToken,
+    },
+  });
+});
+
 const AuthController = {
   loginUser,
   refreshToken,
@@ -138,6 +156,7 @@ const AuthController = {
   isBlockAccount,
   find_by_all_admin,
   loginUserViaSocial,
+  googleLogin,
 };
 
 export default AuthController;

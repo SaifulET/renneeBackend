@@ -37,6 +37,17 @@ router.get(
 );
 
 router.get(
+    "/get_single_conversation_messages/:conversationId",
+    auth(
+        USER_ROLE.superAdmin,
+        USER_ROLE.admin,
+        USER_ROLE.consultant,
+        USER_ROLE.buyer
+    ),
+    MessageController.getConversationMessages
+);
+
+router.get(
     "/get-chat-list",
     auth(
         USER_ROLE.superAdmin,

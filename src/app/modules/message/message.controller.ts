@@ -88,8 +88,24 @@ const getChatList = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getConversationMessages = catchAsync(async (req: Request, res: Response) => {
+    const { conversationId } = req.params;
+    const user = (req as any).user;
+    
+    const result = await MessageService.getConversationMessages(conversationId, req.query);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Conversation messages retrieved successfully",
+        meta: result.meta,
+        data: result.data,
+    });
+});
+
 export const MessageController = {
     sendMessage,
     getConversation,
     getChatList,
+    getConversationMessages,
 };

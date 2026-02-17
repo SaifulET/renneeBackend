@@ -1,3 +1,3 @@
 
 
-export  const search_query=["name", "email"]
+export const search_query = ["name", "email", "title"];

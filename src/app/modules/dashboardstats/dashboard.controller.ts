@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../user/user.model';
+import { Booking } from '../bookings/booking.model';
+import { Service } from '../services/service.model';
 import httpStatus from 'http-status';
 
 // Simple catchAsync utility
@@ -30,48 +32,35 @@ const sendResponse = (
 
 const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
   try {
-    // Get total products count
-    // const totalProducts = await Product.countDocuments();
+    // Get total users count
+    const totalUsers = await User.countDocuments({ role: 'buyer' });
     
-    // Get total orders count
-    // const totalOrders = await Order.countDocuments();
-    
-    // Get total customers count (users with buyer role)
-    const totalCustomers = await User.countDocuments({ role: 'buyer' });
-    
-    // Get total collections count
-    // const totalCollections = await Collection.countDocuments();
-
-    // Get recent orders (last 5)
-    // const recentOrders = await Order.find()
-    //   .sort({ createdAt: -1 })
-    //   .limit(5)
-    //   .populate('customerId', 'fullname email')
-    //   .populate('items.productId', 'name price');
-
-    // Get top selling products
-    // const topSellingProducts = await Product.aggregate([
-    //   { $sort: { sold: -1 } },
-    //   { $limit: 5 },
-    //   { $project: { name: 1, price: 1, sold: 1, images: { $slice: ['$images', 1] } } }
-    // ]);
-    
-    // Dummy stats for now
-    const totalProducts = 0;
-    const totalOrders = 0;
-    const totalCollections = 0;
-    const recentOrders: any[] = [];
-    const topSellingProducts: any[] = [];
-
-    const stats = {
-      summary: {
-        totalProducts,
-        totalOrders,
-        totalCustomers,
-        totalCollections,
+    // Get total revenue from paid bookings
+    const totalRevenue = await Booking.aggregate([
+      { $match: { payment_status: 'Paid' } },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'service',
+          foreignField: '_id',
+          as: 'service'
+        }
       },
-      recentOrders,
-      topSellingProducts,
+      { $unwind: '$service' },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$service.price' }
+        }
+      }
+    ]);
+
+    const revenue = totalRevenue.length > 0 ? totalRevenue[0].totalRevenue : 0;
+
+    // Format the stats as required
+    const stats = {
+      totalUsers: totalUsers,
+      totalRevenue: revenue
     };
 
     sendResponse(res, {
@@ -156,62 +145,50 @@ const getUserGrowth = catchAsync(async (req: Request, res: Response) => {
 
     const totalUsers = monthlyData.reduce((sum, item) => sum + item.totalUsers, 0);
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'User growth data retrieved successfully',
-      data: {
-        year: targetYear,
-        totalUsers,
-        monthlyData,
-      },
-    });
+    // If no users found for the year, provide sample data for demonstration
+    if (totalUsers === 0) {
+      const sampleData = [
+        { month: 'Jan', totalUsers: 680 },
+        { month: 'Feb', totalUsers: 380 },
+        { month: 'Mar', totalUsers: 780 },
+        { month: 'Apr', totalUsers: 550 },
+        { month: 'May', totalUsers: 440 },
+        { month: 'Jun', totalUsers: 820 },
+        { month: 'Jul', totalUsers: 550 },
+        { month: 'Aug', totalUsers: 600 },
+        { month: 'Sep', totalUsers: 820 },
+        { month: 'Oct', totalUsers: 720 },
+        { month: 'Nov', totalUsers: 550 },
+        { month: 'Dec', totalUsers: 780 },
+      ];
+
+      sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'User growth data retrieved successfully (sample data shown as no real data found)',
+        data: {
+          year: targetYear,
+          totalUsers: sampleData.reduce((sum, item) => sum + item.totalUsers, 0),
+          monthlyData: sampleData,
+        },
+      });
+    } else {
+      sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'User growth data retrieved successfully',
+        data: {
+          year: targetYear,
+          totalUsers,
+          monthlyData,
+        },
+      });
+    }
   } catch (error) {
     sendResponse(res, {
       statusCode: httpStatus.INTERNAL_SERVER_ERROR,
       success: false,
       message: 'Error retrieving user growth data',
-      error: (error as Error).message,
-    });
-  }
-});
-
-const getRecentOrders = catchAsync(async (req: Request, res: Response) => {
-  try {
-    const { limit = 10 } = req.query;
-    
-    // const recentOrders = await Order.find()
-    //   .sort({ createdAt: -1 })
-    //   .limit(Number(limit))
-    //   .populate('customerId', 'fullname email')
-    //   .populate('items.productId', 'name price')
-    //   .select('customerId status createdAt totalAmount items');
-
-    // const formattedOrders = recentOrders.map(order => {
-    //   const customer = order.customerId as any;
-    //   return {
-    //     orderNumber: `#LUN-${String(order._id).slice(-3).toUpperCase()}`,
-    //     customerName: customer?.fullname || 'Unknown',
-    //     status: order.status,
-    //     date: order.createdAt.toISOString().split('T')[0],
-    //     totalAmount: order.totalAmount,
-    //     items: order.items
-    //   };
-    // });
-    
-    const formattedOrders: any[] = [];
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'Recent orders retrieved successfully',
-      data: formattedOrders,
-    });
-  } catch (error) {
-    sendResponse(res, {
-      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
-      success: false,
-      message: 'Error retrieving recent orders',
       error: (error as Error).message,
     });
   }
@@ -224,13 +201,15 @@ const getRecentUsers = catchAsync(async (req: Request, res: Response) => {
     const recentUsers = await User.find({ role: 'buyer' })
       .sort({ createdAt: -1 })
       .limit(Number(limit))
-      .select('fullname email createdAt')
+      .select('fullname email phone createdAt')
       .lean();
 
-    const formattedUsers = recentUsers.map((user: any) => ({
-      name: user.fullname,
-      email: user.email,
-      registrationDate: user.createdAt ? user.createdAt.toISOString().split('T')[0] : 'Unknown'
+    const formattedUsers = recentUsers.map((user: any, index: number) => ({
+      serialId: String(index + 1).padStart(2, '0'),
+      fullname: user.fullname || 'N/A',
+      email: user.email || 'N/A',
+      phone: user.phone || 'N/A',
+      joinedDate: user.createdAt ? user.createdAt.toISOString().split('T')[0] : 'Unknown'
     }));
 
     sendResponse(res, {
@@ -252,6 +231,5 @@ const getRecentUsers = catchAsync(async (req: Request, res: Response) => {
 export const DashboardControllers = {
   getDashboardStats,
   getUserGrowth,
-  getRecentOrders,
   getRecentUsers,
 };
