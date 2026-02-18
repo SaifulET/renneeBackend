@@ -27,4 +27,28 @@ router.get(
   DashboardControllers.getRecentUsers
 );
 
+router.get(
+  '/consultants_total_services',
+  auth(USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  DashboardControllers.getConsultantTotalServices
+);
+
+router.get(
+  '/consultants_total_clients',
+  auth(USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  DashboardControllers.getConsultantTotalClients
+);
+
+router.get(
+  '/consultants_total_earnings',
+  auth(USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  DashboardControllers.getConsultantTotalEarnings
+);
+
+router.get(
+  '/consultants_served_clients',
+  auth(USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
+  DashboardControllers.getConsultantServedClients
+);
+
 export const DashboardRoutes = router;

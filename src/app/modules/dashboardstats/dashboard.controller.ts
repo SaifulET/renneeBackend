@@ -3,6 +3,7 @@ import User from '../user/user.model';
 import { Booking } from '../bookings/booking.model';
 import { Service } from '../services/service.model';
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 
 // Simple catchAsync utility
 const catchAsync = (fn: Function) => {
@@ -19,6 +20,7 @@ const sendResponse = (
     success: boolean;
     message: string;
     data?: any;
+    meta?: any;
     error?: string;
   }
 ) => {
@@ -26,6 +28,7 @@ const sendResponse = (
     success: data.success,
     message: data.message || null,
     data: data.data || null,
+    meta: data.meta || null,
     error: data.error || null,
   });
 };
@@ -145,45 +148,16 @@ const getUserGrowth = catchAsync(async (req: Request, res: Response) => {
 
     const totalUsers = monthlyData.reduce((sum, item) => sum + item.totalUsers, 0);
 
-    // If no users found for the year, provide sample data for demonstration
-    if (totalUsers === 0) {
-      const sampleData = [
-        { month: 'Jan', totalUsers: 680 },
-        { month: 'Feb', totalUsers: 380 },
-        { month: 'Mar', totalUsers: 780 },
-        { month: 'Apr', totalUsers: 550 },
-        { month: 'May', totalUsers: 440 },
-        { month: 'Jun', totalUsers: 820 },
-        { month: 'Jul', totalUsers: 550 },
-        { month: 'Aug', totalUsers: 600 },
-        { month: 'Sep', totalUsers: 820 },
-        { month: 'Oct', totalUsers: 720 },
-        { month: 'Nov', totalUsers: 550 },
-        { month: 'Dec', totalUsers: 780 },
-      ];
-
-      sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'User growth data retrieved successfully (sample data shown as no real data found)',
-        data: {
-          year: targetYear,
-          totalUsers: sampleData.reduce((sum, item) => sum + item.totalUsers, 0),
-          monthlyData: sampleData,
-        },
-      });
-    } else {
-      sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'User growth data retrieved successfully',
-        data: {
-          year: targetYear,
-          totalUsers,
-          monthlyData,
-        },
-      });
-    }
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User growth data retrieved successfully',
+      data: {
+        year: targetYear,
+        totalUsers,
+        monthlyData,
+      },
+    });
   } catch (error) {
     sendResponse(res, {
       statusCode: httpStatus.INTERNAL_SERVER_ERROR,
@@ -228,8 +202,167 @@ const getRecentUsers = catchAsync(async (req: Request, res: Response) => {
   }
 });
 
+const getConsultantTotalServices = catchAsync(async (req: Request, res: Response) => {
+  try {
+    const consultantId = req.user?.id;
+    
+    const totalServices = await Service.countDocuments({ 
+      consultant_ids: consultantId 
+    });
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Consultant total services retrieved successfully',
+      data: { totalServices },
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: 'Error retrieving consultant total services',
+      error: (error as Error).message,
+    });
+  }
+});
+
+const getConsultantTotalClients = catchAsync(async (req: Request, res: Response) => {
+  try {
+    const consultantId = req.user?.id;
+    
+    const totalClients = await Booking.distinct('user', { 
+      consultant: consultantId,
+      payment_status: 'Paid'
+    });
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Consultant total clients retrieved successfully',
+      data: { totalClients: totalClients.length },
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: 'Error retrieving consultant total clients',
+      error: (error as Error).message,
+    });
+  }
+});
+
+const getConsultantTotalEarnings = catchAsync(async (req: Request, res: Response) => {
+  try {
+    const consultantId = req.user?.id;
+    
+    const totalEarnings = await Booking.aggregate([
+      { 
+        $match: { 
+          consultant: new Types.ObjectId(consultantId),
+          payment_status: 'Paid'
+        } 
+      },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'service',
+          foreignField: '_id',
+          as: 'service'
+        }
+      },
+      { $unwind: '$service' },
+      {
+        $group: {
+          _id: null,
+          totalEarnings: { $sum: '$service.price' }
+        }
+      }
+    ]);
+
+    const earnings = totalEarnings.length > 0 ? totalEarnings[0].totalEarnings : 0;
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Consultant total earnings retrieved successfully',
+      data: { totalEarnings: earnings },
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: 'Error retrieving consultant total earnings',
+      error: (error as Error).message,
+    });
+  }
+});
+
+const getConsultantServedClients = catchAsync(async (req: Request, res: Response) => {
+  try {
+    const consultantId = req.user?.id;
+    const { page = 1, limit = 10 } = req.query;
+    
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const total = await Booking.countDocuments({ 
+      consultant: consultantId,
+      payment_status: 'Paid'
+    });
+    
+    const totalPage = Math.ceil(total / limitNumber);
+
+    const clients = await Booking.find({ 
+      consultant: consultantId,
+      payment_status: 'Paid'
+    })
+      .populate('user', 'fullname email phone')
+      .populate('service', 'title price')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean();
+
+    const formattedClients = clients.map((booking: any, index: number) => ({
+      serialId: String(index + 1).padStart(2, '0'),
+      clientName: booking.user?.fullname || 'N/A',
+      clientEmail: booking.user?.email || 'N/A',
+      clientPhone: booking.user?.phone || 'N/A',
+      serviceName: booking.service?.title || 'N/A',
+      servicePrice: booking.service?.price || 0,
+      bookingDate: booking.date ? booking.date.toISOString().split('T')[0] : 'Unknown',
+      slotTime: booking.slot_time || 'N/A'
+    }));
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Consultant served clients retrieved successfully',
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        total,
+        totalPage
+      },
+      data: formattedClients,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: 'Error retrieving consultant served clients',
+      error: (error as Error).message,
+    });
+  }
+});
+
 export const DashboardControllers = {
   getDashboardStats,
   getUserGrowth,
   getRecentUsers,
+  getConsultantTotalServices,
+  getConsultantTotalClients,
+  getConsultantTotalEarnings,
+  getConsultantServedClients,
 };

@@ -30,7 +30,7 @@ router.post(
 
 router.get(
   "/myprofile",
-  auth(USER_ROLE.admin, USER_ROLE.buyer, USER_ROLE.admin,  USER_ROLE.superAdmin),
+  auth(USER_ROLE.admin, USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.superAdmin),
   AuthController.myprofile
 );
 
@@ -61,7 +61,7 @@ router.get(
 
 router.delete(
   "/delete_account/:id",
-  auth(USER_ROLE.consultant, USER_ROLE.buyer, USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin),
   AuthController.deleteAccount
 );
 
