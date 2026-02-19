@@ -8,6 +8,7 @@ import { sendPushNotification } from "../../utils/notification.helper";
 import users from "../user/user.model";
 import { Discount } from "../discounts/discount.model";
 import { Conversation } from "../message/message.model";
+import { USER_ROLE } from "../user/user.constant";
 
 const getSingleBooking = async (id: string) => {
   const booking = await Booking.findById(id)
@@ -235,6 +236,7 @@ const webhookVerify = async (event: any) => {
     const consultant = await users.findById(consultantId);
     const user = await users.findById(userId);
 
+    // Send notification to consultant
     if (consultant?.fcm) {
       await sendPushNotification(
         consultant.fcm,
@@ -243,12 +245,49 @@ const webhookVerify = async (event: any) => {
       );
     }
 
+    // Send notification to user
     if (user?.fcm) {
       await sendPushNotification(
         user.fcm,
         "Booking Confirmed",
         `Your booking for ${booking.slot_time} is confirmed.`
       );
+    }
+
+    // Send notifications to all admins and super admins
+    const admins = await users.find({
+      role: { $in: [USER_ROLE.admin, USER_ROLE.superAdmin] }
+    });
+
+    for (const admin of admins) {
+      // Always create database notification
+      const { NotificationService } = await import("../notifications/notification.service");
+      await NotificationService.createNotification(
+        admin._id.toString(),
+        "New Booking Paid",
+        `A new booking has been paid by ${user?.fullname || "a client"} with ${consultant?.fullname || "a consultant"} for ${booking.slot_time}`,
+        "booking",
+        {
+          senderId: userId,
+          relatedId: booking._id.toString(),
+          priority: "medium",
+          metadata: {
+            bookingId: booking._id.toString(),
+            userName: user?.fullname,
+            consultantName: consultant?.fullname,
+            slotTime: booking.slot_time
+          }
+        }
+      );
+
+      // Send push notification only if FCM token exists
+      if (admin.fcm) {
+        await sendPushNotification(
+          admin.fcm,
+          "New Booking Paid",
+          `A new booking has been paid by ${user?.fullname || "a client"} with ${consultant?.fullname || "a consultant"} for ${booking.slot_time}`
+        );
+      }
     }
     // --- logic from confirmBooking end ---
   }
@@ -422,6 +461,7 @@ const confirmBooking = async (payload: any) => {
   const consultant = await users.findById(consultantId);
   const user = await users.findById(userId);
 
+  // Send notification to consultant
   if (consultant?.fcm) {
     await sendPushNotification(
       consultant.fcm,
@@ -430,12 +470,49 @@ const confirmBooking = async (payload: any) => {
     );
   }
 
+  // Send notification to user
   if (user?.fcm) {
     await sendPushNotification(
       user.fcm,
       "Booking Confirmed",
       `Your booking for ${payload.slot_time} is confirmed.`
     );
+  }
+
+  // Send notifications to all admins and super admins
+  const admins = await users.find({
+    role: { $in: [USER_ROLE.admin, USER_ROLE.superAdmin] }
+  });
+
+  for (const admin of admins) {
+    // Always create database notification
+    const { NotificationService } = await import("../notifications/notification.service");
+    await NotificationService.createNotification(
+      admin._id.toString(),
+      "New Booking Paid",
+      `A new booking has been paid by ${user?.fullname || "a client"} with ${consultant?.fullname || "a consultant"} for ${payload.slot_time}`,
+      "booking",
+      {
+        senderId: userId,
+        relatedId: booking._id.toString(),
+        priority: "medium",
+        metadata: {
+          bookingId: booking._id.toString(),
+          userName: user?.fullname,
+          consultantName: consultant?.fullname,
+          slotTime: payload.slot_time
+        }
+      }
+    );
+
+    // Send push notification only if FCM token exists
+    if (admin.fcm) {
+      await sendPushNotification(
+        admin.fcm,
+        "New Booking Paid",
+        `A new booking has been paid by ${user?.fullname || "a client"} with ${consultant?.fullname || "a consultant"} for ${payload.slot_time}`
+      );
+    }
   }
 
   return booking;

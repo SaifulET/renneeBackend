@@ -164,8 +164,8 @@ const getConversationMessages = async (conversationId: string, query: Record<str
         .fields();
 
     const messages = await messageQuery.modelQuery
-        .populate('senderId', 'fullname email profile_image')
-        .populate('receiverId', 'fullname email profile_image')
+        .populate('senderId', 'fullname email photo')
+        .populate('receiverId', 'fullname email photo')
         .sort({ createdAt: -1 }); // Show newest messages first
 
     const meta = await messageQuery.countTotal();

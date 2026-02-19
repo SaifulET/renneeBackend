@@ -3,9 +3,43 @@ import httpStatus from "http-status";
 import UserServices from "./user.service";
 import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/asyncCatch";
+import { NotificationService } from "../notifications/notification.service";
+import users from "./user.model";
+import { USER_ROLE } from "./user.constant";
 
 const createUser: RequestHandler = catchAsync(async (req, res) => {
   const result = await UserServices.createUserIntoDb(req.body);
+  
+  // Send notification to all super admins when a new account is created
+  try {
+    const superAdmins = await users.find({
+      role: USER_ROLE.superAdmin
+    });
+
+    if (superAdmins.length > 0) {
+      const superAdminIds = superAdmins.map(admin => admin._id.toString());
+      
+      await NotificationService.sendBulkNotifications(
+        superAdminIds,
+        "New Account Created",
+        `A new ${(result as any).role} account has been created: ${(result as any).fullname} (${(result as any).email})`,
+        "system",
+        {
+          priority: "medium",
+          relatedId: (result as any)._id?.toString(),
+          metadata: {
+            userRole: (result as any).role,
+            userEmail: (result as any).email,
+            userName: (result as any).fullname
+          }
+        }
+      );
+    }
+  } catch (notificationError) {
+    // Log error but don't fail the user creation
+    console.error("Failed to send notification to super admins:", notificationError);
+  }
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

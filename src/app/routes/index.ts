@@ -10,6 +10,7 @@ import contactRoutes from "../modules/contact/contact.router";
 import { DiscountRoutes } from "../modules/discounts/discount.routes";
 import { MessageRoutes } from "../modules/message/message.routes";
 import { DashboardRoutes } from "../modules/dashboardstats/dashboard.router";
+import { NotificationRoutes } from "../modules/notifications/notification.routes";
 
 
 const router = express.Router();
@@ -54,6 +55,10 @@ const moduleRoutes = [
   {
     path: "/dashboardstats",
     route: DashboardRoutes,
+  },
+  {
+    path: "/notifications",
+    route: NotificationRoutes,
   }
 ];
 

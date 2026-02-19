@@ -8,6 +8,8 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import users from '../user/user.model';
 import AppError from '../../errors/AppError';
+import { NotificationService } from "../notifications/notification.service";
+import { USER_ROLE } from "../user/user.constant";
 
 const createContact: RequestHandler = catchAsync(async (req, res) => {
   const token = req.headers.authorization;
@@ -37,6 +39,38 @@ const createContact: RequestHandler = catchAsync(async (req, res) => {
   }
 
   const result = await contactServices.createContactIntoDb(req.body);
+  
+  // Send notification to all admins when a contact message is created
+  try {
+    const admins = await users.find({
+      role: { $in: [USER_ROLE.admin, USER_ROLE.superAdmin] }
+    });
+
+    if (admins.length > 0) {
+      const adminIds = admins.map(admin => admin._id.toString());
+      
+      await NotificationService.sendBulkNotifications(
+        adminIds,
+        "New Contact Message",
+        `New contact message from ${req.body.name} (${req.body.email}): ${req.body.message?.substring(0, 100)}...`,
+        "message",
+        {
+          priority: "medium",
+          relatedId: (result as any)._id?.toString(),
+          metadata: {
+            contactName: req.body.name,
+            contactEmail: req.body.email,
+            contactMessage: req.body.message,
+            contactId: (result as any)._id?.toString()
+          }
+        }
+      );
+    }
+  } catch (notificationError) {
+    // Log error but don't fail contact creation
+    console.error("Failed to send notification to admins:", notificationError);
+  }
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,

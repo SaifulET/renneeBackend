@@ -48,7 +48,6 @@ router.get(
 );
 
 
-
 // /api/v1/bookings/confirm
 router.post(
   "/confirm",
