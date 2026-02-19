@@ -10,6 +10,8 @@ import { MessageService } from "./app/modules/message/message.service";
 import { Conversation } from "./app/modules/message/message.model";
 
 
+const dns = require('node:dns/promises');
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 
 let server: HttpServer | null = null;
 
