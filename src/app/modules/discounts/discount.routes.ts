@@ -27,6 +27,7 @@ router.patch(
     DiscountController.updateDiscount,
 );
 
+
 router.delete(
     '/deletediscount/:id',
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),
