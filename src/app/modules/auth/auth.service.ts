@@ -11,8 +11,8 @@ import { user_search_filed } from "./auth.constant";
 import {
   deleteFromCloudinary,
   uploadImageToCloudinary,
+  uploadBufferToCloudinary,
 } from "../../utils/cloudinary";
-import fs from "fs";
 import admin from "../../utils/firebase";
 
 const loginUserIntoDb = async (payload: {
@@ -267,20 +267,15 @@ const changeMyProfileIntoDb = async (
     }
 
     if (file) {
-      const filePath = file.path.replace(/\\/g, "/");
       const existingUser = await users.findById(id).select("photoPublicId");
-      const uploaded = await uploadImageToCloudinary(
-        filePath,
+      const uploaded = await uploadBufferToCloudinary(
+        file.buffer,
         "profiles",
         "high"
       );
 
       updateData.photo = uploaded.secure_url;
       updateData.photoPublicId = uploaded.public_id;
-
-      try {
-        fs.unlinkSync(file.path);
-      } catch { }
 
       try {
         if (existingUser?.photoPublicId) {

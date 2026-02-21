@@ -8,6 +8,12 @@ import {
   TTermsConditions,
   TSocalMediaLinks,
   SocalMediaLinksModel,
+  TWebsitePromotion,
+  TProductPromotion,
+  TVendorsPromotion,
+  WebsitePromotionModel,
+  ProductPromotionModel,
+  VendorsPromotionModel,
 } from './settings.interface';
 
 const AboutUsSchema = new Schema<TAboutUs, AboutModel>(
@@ -193,4 +199,40 @@ SocalMediaLinksSchema.statics.isSocalMediaLinksCustomId = async function (id: st
 export const socalMediaLinks = model<TSocalMediaLinks, SocalMediaLinksModel>(
   'socalMediaLinks',
   SocalMediaLinksSchema,
+);
+
+const PromotionSchema = new Schema<TWebsitePromotion>({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  link: { type: String, required: true },
+  img: { type: String, required: true },
+  isDelete: { type: Boolean, default: false },
+}, { timestamps: true });
+
+PromotionSchema.pre('find', function (next) {
+  this.find({ isDelete: { $ne: true } });
+  next();
+});
+PromotionSchema.pre('findOne', function (next) {
+  this.findOne({ isDelete: { $ne: true } });
+  next();
+});
+PromotionSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDelete: { $ne: true } } });
+  next();
+});
+
+export const WebsitePromotion = model<TWebsitePromotion, WebsitePromotionModel>(
+  'WebsitePromotion',
+  PromotionSchema,
+);
+
+export const ProductPromotion = model<TProductPromotion, ProductPromotionModel>(
+  'ProductPromotion',
+  PromotionSchema,
+);
+
+export const VendorsPromotion = model<TVendorsPromotion, VendorsPromotionModel>(
+  'VendorsPromotion',
+  PromotionSchema,
 );

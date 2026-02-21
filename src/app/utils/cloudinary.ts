@@ -136,6 +136,56 @@ export const uploadImageToCloudinary = async (
   };
 };
 
+export const uploadBufferToCloudinary = async (
+  buffer: Buffer,
+  folder: string,
+  optimizationLevel: OptimizationLevel = "medium"
+): Promise<CloudinaryUploadResult> => {
+  if (
+    !config.Cloudinary?.CLOUDINARY_CLOUD_NAME ||
+    !config.Cloudinary?.CLOUDINARY_API_KEY ||
+    !config.Cloudinary?.CLOUDINARY_API_SECRET
+  ) {
+    throw new Error("Cloudinary credentials are not configured");
+  }
+
+  const fileSize = buffer.length;
+  const optimizationSettings = getOptimizationSettings(
+    optimizationLevel,
+    fileSize
+  );
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+        transformation: [optimizationSettings],
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return reject(error);
+        }
+        if (!result) {
+          return reject(new Error("Cloudinary upload result is undefined"));
+        }
+
+        console.log(
+          `Buffer image optimized and uploaded: ${result.secure_url}, Size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`
+        );
+
+        resolve({
+          secure_url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    );
+
+    uploadStream.end(buffer);
+  });
+};
+
 export const deleteFromCloudinary = async (publicId: string) => {
   if (!publicId) return;
 

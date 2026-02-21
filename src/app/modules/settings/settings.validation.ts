@@ -44,11 +44,27 @@ const SocalMediaLinksValidationSchema = z.object({
   }),
 });
 
+const PromotionValidationSchema = z.object({
+  body: z.object({
+    title: z.string({ message: 'Title is required' }),
+    description: z.string({ message: 'Description is required' }),
+    link: z.string({ message: 'Link is required' }),
+    img: z.string().optional(),
+  }),
+});
+
+const WebsitePromotionOptionValidationSchema = PromotionValidationSchema;
+const ProductPromotionOptionValidationSchema = PromotionValidationSchema;
+const VendorsPromotionOptionValidationSchema = PromotionValidationSchema;
+
 const settingValidationSchema = {
   AboutValidationSchema,
   PrivacyPolicysValidationSchema,
   TermsConditionsValidationSchema,
   SocalMediaLinksValidationSchema,
+  WebsitePromotionOptionValidationSchema,
+  ProductPromotionOptionValidationSchema,
+  VendorsPromotionOptionValidationSchema,
 };
 
 export default settingValidationSchema;

@@ -4,7 +4,7 @@ import LoginValidationSchema from "./auth.validation";
 import validationRequest from "../../middlewares/validationRequest";
 import { USER_ROLE } from "../user/user.constant";
 import auth from "../../middlewares/auth";
-import upload from "../../utils/uploadFile";
+import upload, { memoryUpload } from "../../utils/uploadFile";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 
@@ -38,7 +38,7 @@ router.get(
 router.patch(
   "/update_my_profile",
   auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
-  upload.single("file"),
+  memoryUpload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {

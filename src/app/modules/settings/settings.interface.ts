@@ -51,3 +51,19 @@ export interface SocalMediaLinksModel extends Model<TSocalMediaLinks> {
   // eslint-disable-next-line no-unused-vars
   isSocalMediaLinksCustomId(id: string): Promise<TSocalMediaLinks>;
 }
+
+export interface TPromotion {
+  title: string;
+  description: string;
+  link: string;
+  img: string;
+  isDelete: boolean;
+}
+
+export type TWebsitePromotion = TPromotion;
+export type TProductPromotion = TPromotion;
+export type TVendorsPromotion = TPromotion;
+
+export interface WebsitePromotionModel extends Model<TWebsitePromotion> {}
+export interface ProductPromotionModel extends Model<TProductPromotion> {}
+export interface VendorsPromotionModel extends Model<TVendorsPromotion> {}

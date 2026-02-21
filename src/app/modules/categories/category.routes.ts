@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { CategoryController } from "./category.controller";
 import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../user/user.constant";
-import upload from "../../utils/uploadFile";
+import upload, { memoryUpload } from "../../utils/uploadFile";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 
@@ -11,7 +11,7 @@ const router = express.Router();
 router.post(
   "/createcategory",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  upload.single("file"),
+  memoryUpload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
@@ -38,7 +38,7 @@ router.get(
 router.patch(
   "/updatecategory/:id",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  upload.single("file"),
+  memoryUpload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {

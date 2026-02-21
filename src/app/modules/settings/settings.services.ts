@@ -1,7 +1,8 @@
-import { aboutus, privacypolicys, termsConditions, socalMediaLinks } from './settings.modal';
+import { aboutus, privacypolicys, termsConditions, socalMediaLinks, WebsitePromotion, ProductPromotion, VendorsPromotion } from './settings.modal';
 import httpStatus from 'http-status';
-import { TAboutUs, TPrivacyPolicy, TTermsConditions, TSocalMediaLinks } from './settings.interface';
+import { TAboutUs, TPrivacyPolicy, TTermsConditions, TSocalMediaLinks, TWebsitePromotion, TProductPromotion, TVendorsPromotion } from './settings.interface';
 import AppError from '../../errors/AppError';
+import { Model } from 'mongoose';
 
 
 const updateAboutUsIntoDb = async (payload: TAboutUs) => {
@@ -182,6 +183,39 @@ const SettingServices = {
   findBytermsConditionsIntoDb,
   socalMediaLinksIntoDb,
   getSocalMediaLinksIntoDb,
+  // Website Promotion
+  websitePromotionOptionIntoDb: (payload: TWebsitePromotion) => createPromotion(WebsitePromotion, payload),
+  getWebsitePromotionOptionFromDb: () => getPromotions(WebsitePromotion),
+  updateWebsitePromotionIntoDb: (id: string, payload: Partial<TWebsitePromotion>) => updatePromotion(WebsitePromotion, id, payload),
+  deleteWebsitePromotionFromDb: (id: string) => deletePromotion(WebsitePromotion, id),
+
+  // Product Promotion
+  productPromotionOptionIntoDb: (payload: TProductPromotion) => createPromotion(ProductPromotion, payload),
+  getProductPromotionOptionFromDb: () => getPromotions(ProductPromotion),
+  updateProductPromotionIntoDb: (id: string, payload: Partial<TProductPromotion>) => updatePromotion(ProductPromotion, id, payload),
+  deleteProductPromotionFromDb: (id: string) => deletePromotion(ProductPromotion, id),
+
+  // Vendors Promotion
+  vendorsPromotionOptionIntoDb: (payload: TVendorsPromotion) => createPromotion(VendorsPromotion, payload),
+  getVendorsPromotionOptionFromDb: () => getPromotions(VendorsPromotion),
+  updateVendorsPromotionIntoDb: (id: string, payload: Partial<TVendorsPromotion>) => updatePromotion(VendorsPromotion, id, payload),
+  deleteVendorsPromotionFromDb: (id: string) => deletePromotion(VendorsPromotion, id),
 };
+
+async function createPromotion<T>(model: Model<T>, payload: T) {
+  return await model.create(payload);
+}
+
+async function getPromotions<T>(model: Model<T>) {
+  return await model.find().select('-isDelete -createdAt -updatedAt -__v');
+}
+
+async function updatePromotion<T>(model: Model<T>, id: string, payload: Partial<T>) {
+  return await model.findByIdAndUpdate(id, payload, { new: true });
+}
+
+async function deletePromotion<T>(model: Model<T>, id: string) {
+  return await model.findByIdAndUpdate(id, { isDelete: true }, { new: true });
+}
 
 export default SettingServices;

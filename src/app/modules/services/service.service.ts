@@ -1,27 +1,18 @@
 import { TService } from "./service.interface";
 import { Service } from "./service.model";
-
-import { uploadImageToCloudinary } from "../../utils/cloudinary";
-import fs from "fs";
+import { uploadImageToCloudinary, uploadBufferToCloudinary } from "../../utils/cloudinary";
 
 const createService = async (req: any) => {
   const file = req.file;
   const payload = req.body;
 
   if (file) {
-    const filePath = file.path.replace(/\\/g, "/");
-    const uploaded = await uploadImageToCloudinary(
-      filePath,
+    const uploaded = await uploadBufferToCloudinary(
+      file.buffer,
       "services",
       "high"
     );
     payload.imgs = [uploaded.secure_url];
-
-    try {
-      fs.unlinkSync(file.path);
-    } catch (err) {
-      console.error("Error deleting local file:", err);
-    }
   }
 
   const result = await Service.create(payload);
@@ -129,19 +120,12 @@ const updateService = async (req: any) => {
   const payload = req.body;
 
   if (file) {
-    const filePath = file.path.replace(/\\/g, "/");
-    const uploaded = await uploadImageToCloudinary(
-      filePath,
+    const uploaded = await uploadBufferToCloudinary(
+      file.buffer,
       "services",
       "high"
     );
     payload.imgs = [uploaded.secure_url];
-
-    try {
-      fs.unlinkSync(file.path);
-    } catch (err) {
-      console.error("Error deleting local file:", err);
-    }
   }
 
   const result = await Service.findByIdAndUpdate(id, payload, { new: true });
