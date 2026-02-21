@@ -4,6 +4,8 @@ export interface TDiscount {
     title: string;
     description: string;
     useablecode: string;
+    maxusetimes: number;
+    limitPerUser: number;
     percentage: number;
     isActive: boolean;
     isDelete: boolean;

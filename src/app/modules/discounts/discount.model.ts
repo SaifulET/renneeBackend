@@ -15,6 +15,15 @@ const DiscountSchema = new Schema<TDiscount, DiscountModel>(
             type: String,
             required: [true, 'Discount useablecode is required'],
         },
+        maxusetimes: {
+            type: Number,
+            required: [true, 'Discount maxusetimes is required'],
+        },
+        limitPerUser: {
+            type: Number,
+            required: [true, 'Discount limitPerUser is required'],
+            default: 1,
+        },
         percentage: {
             type: Number,
             required: [true, 'Discount percentage is required'],
