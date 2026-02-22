@@ -582,6 +582,29 @@ const deleteAllTypesOfUserIntoDb = async (id: string) => {
   }
 }
 
+const getSingleUserIntoDb = async (id: string) => {
+  try {
+    const result = await users.findById(id)
+      .select('fullname photo email role phoneNumber createdAt isVerify');
+
+    if (!result) {
+      throw new AppError(
+        httpStatus.NOT_FOUND,
+        'User not found',
+        ''
+      );
+    }
+
+    return result;
+  } catch (error) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to fetch user',
+      ''
+    );
+  }
+}
+
 
 
 
@@ -598,5 +621,6 @@ const UserServices = {
   recently_joined_user_IntoDb,
   deleteAllTypesOfUserIntoDb,
   getAllConsultIntoDb,
+  getSingleUserIntoDb,
 };
 export default UserServices;

@@ -27,6 +27,13 @@ router.patch(
   UserController.userVarification
 );
 
+// {{localUrl}}/api/v1/user/get_single_user/:id
+router.get(
+  "/get_single_user/:id",
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin, USER_ROLE.consultant, USER_ROLE.buyer),
+  UserController.getSingleUser
+);
+
 router.patch(
   "/change_password",
   auth(USER_ROLE.buyer, USER_ROLE.consultant, USER_ROLE.admin, USER_ROLE.superAdmin),
