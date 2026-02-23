@@ -6,6 +6,7 @@ export interface IMessage {
     receiverId: Types.ObjectId;
     text?: string;
     images?: string[];
+    seen: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

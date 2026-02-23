@@ -25,6 +25,8 @@ export type TUser = {
   fcm?: string;
   address?: string;
   phoneNumber?: string;
+  isOnline: boolean;
+  lastSeen: Date;
   isDelete: boolean;
 };
 

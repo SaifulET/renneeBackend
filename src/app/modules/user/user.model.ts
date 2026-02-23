@@ -98,6 +98,14 @@ const TUserSchema = new Schema<TUser, UserModel>(
       required: [false, "fcm is not  required"],
       default: null,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
     isDelete: {
       type: Boolean,
       required: [true, "isDeleted is Required"],

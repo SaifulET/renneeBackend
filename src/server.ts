@@ -8,6 +8,7 @@ import httpStatus from "http-status";
 import AppError from "./app/errors/AppError";
 import { MessageService } from "./app/modules/message/message.service";
 import { Conversation } from "./app/modules/message/message.model";
+import User from "./app/modules/user/user.model";
 
 
 const dns = require('node:dns/promises');
@@ -66,10 +67,19 @@ async function main() {
       io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
 
-        socket.on("join_conversation", (data) => {
+        socket.on("join_user", async (data) => {
+          const userId = data?.userId || data?.userid;
+          if (userId) {
+            socket.join(`user_${userId}`);
+            (socket as any).userId = userId;
+            await User.findByIdAndUpdate(userId, { isOnline: true });
+            io.emit("user_status", { userId, isOnline: true });
+            console.log(`User ${userId} joined their personal room and is now online`);
+          }
+        });
+
+        socket.on("join_conversation", async (data) => {
           // data should be { conversationid, myuserid }
-          // Case-insensitive handling or strict? User asked for specific keys.
-          // Let's support the user's request.
           const conversationId = data?.conversationId || data?.conversationid;
           const userId = data?.myUserId || data?.myuserid;
 
@@ -80,6 +90,12 @@ async function main() {
           }
 
           socket.join(conversationId);
+          (socket as any).userId = userId;
+          
+          // Update user status to online
+          await User.findByIdAndUpdate(userId, { isOnline: true });
+          io.emit("user_status", { userId, isOnline: true });
+
           console.log(`User ${userId} (Socket: ${socket.id}) joined conversation: ${conversationId}`);
 
           // Emit confirmation back to the user
@@ -131,9 +147,35 @@ async function main() {
           }
         });
 
-        socket.on("disconnect", () => {
+        socket.on("typing", (data) => {
+          const { conversationId, userId } = data;
+          socket.to(conversationId).emit("typing", { conversationId, userId });
+        });
+
+        socket.on("stop_typing", (data) => {
+          const { conversationId, userId } = data;
+          socket.to(conversationId).emit("stop_typing", { conversationId, userId });
+        });
+
+        socket.on("mark_as_seen", async (data) => {
+          const { conversationId, userId } = data;
+          try {
+            await MessageService.markAsSeen(conversationId, userId);
+          } catch (error) {
+            console.error("Error marking messages as seen:", error);
+          }
+        });
+
+        socket.on("disconnect", async () => {
+          const userId = (socket as any).userId;
+          if (userId) {
+            const lastSeen = new Date();
+            await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
+            io.emit("user_status", { userId, isOnline: false, lastSeen });
+          }
           console.log("User disconnected:", socket.id);
         });
+        
       });
     }
 

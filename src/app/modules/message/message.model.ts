@@ -50,6 +50,10 @@ const MessageSchema = new Schema<IMessage>(
                 type: String,
             },
         ],
+        seen: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

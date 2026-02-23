@@ -55,9 +55,12 @@ const sendMessage = async (
     // Socket.io integration
     const io = (global as any).io;
     if (io) {
-
-
         io.to(conversation._id.toString()).emit("receive_message", newMessage);
+        // Also notify the receiver in their personal room
+        io.to(`user_${receiverId}`).emit("new_message", {
+            conversationId: conversation._id,
+            message: newMessage
+        });
     }
 
 
@@ -114,10 +117,24 @@ const getChatList = async (userId: string) => {
     const conversations = await Conversation.find({
         participants: userId,
     })
-        .populate("participants", "fullname email profile_image") // Adjust fields based on User model
+        .populate("participants", "fullname email photo isOnline lastSeen") 
         .sort({ lastMessageTime: -1 });
 
-    return conversations;
+    const chatList = await Promise.all(
+        conversations.map(async (conv) => {
+            const unreadCount = await Message.countDocuments({
+                conversationId: conv._id,
+                receiverId: userId,
+                seen: false,
+            });
+            return {
+                ...conv.toObject(),
+                unreadCount,
+            };
+        })
+    );
+
+    return chatList;
 };
 
 const sendMessageToConversation = async (
@@ -176,10 +193,31 @@ const getConversationMessages = async (conversationId: string, query: Record<str
     };
 };
 
+const markAsSeen = async (conversationId: string, userId: string) => {
+    await Message.updateMany(
+        { conversationId, receiverId: userId, seen: false },
+        { $set: { seen: true } }
+    );
+
+    // Notify the other participant that messages have been seen
+    const conversation = await Conversation.findById(conversationId);
+    if (conversation) {
+        const partnerId = conversation.participants.find(p => p.toString() !== userId);
+        const io = (global as any).io;
+        if (io && partnerId) {
+            io.to(conversationId).emit("messages_seen", {
+                conversationId,
+                seenBy: userId
+            });
+        }
+    }
+};
+
 export const MessageService = {
     sendMessage,
     getConversation,
     getChatList,
     sendMessageToConversation,
     getConversationMessages,
+    markAsSeen,
 };
