@@ -3,8 +3,29 @@ import httpStatus from 'http-status';
 import { TAboutUs, TPrivacyPolicy, TTermsConditions, TSocalMediaLinks, TWebsitePromotion, TProductPromotion, TVendorsPromotion } from './settings.interface';
 import AppError from '../../errors/AppError';
 import { Model } from 'mongoose';
+import users from '../user/user.model';
+import { NotificationService } from '../notifications/notification.service';
+import { USER_ROLE } from '../user/user.constant';
 
-
+async function notifyAllUsers(title: string, message: string) {
+  try {
+    // Get all active users
+    const allUsers = await users.find({ isDelete: { $ne: true } }, { _id: 1 });
+    const userIds = allUsers.map(u => u._id.toString());
+    
+    if (userIds.length > 0) {
+      // Don't await this so the response returns to the admin faster
+      NotificationService.sendBulkNotifications(
+        userIds,
+        title,
+        message,
+        'system'
+      ).catch(err => console.error("Bulk notification failed:", err));
+    }
+  } catch (error) {
+    console.error("Failed to notify users about setting update:", error);
+  }
+}
 const updateAboutUsIntoDb = async (payload: TAboutUs) => {
   try {
     const aboutText = payload.aboutUs?.trim() ?? '';
@@ -18,6 +39,11 @@ const updateAboutUsIntoDb = async (payload: TAboutUs) => {
       { aboutUs: aboutText, isDelete: payload.isDelete ?? false },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
+
+
+    if (result) {
+       notifyAllUsers("About Us Updated", "The About Us information has been updated by an administrator.");
+    }
 
     return result
       ? { status: true, message: 'AboutUs successfully saved' }
@@ -61,6 +87,10 @@ const privacyPolicysIntoDb = async (payload: TPrivacyPolicy) => {
       { PrivacyPolicy: privacyPolicyText, isDelete: payload.isDelete ?? false },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+
+    if (result) {
+       notifyAllUsers("Privacy Policy Updated", "The Privacy Policy has been updated by an administrator.");
+    }
 
     return result
       ? { status: true, message: "Privacy policy successfully saved" }
@@ -109,6 +139,10 @@ const termsConditionsIntoDb = async (payload: TTermsConditions) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
+    if (result) {
+       notifyAllUsers("Terms & Conditions Updated", "The Terms and Conditions have been updated by an administrator.");
+    }
+
     return result
       ? { status: true, message: "Terms and Conditions successfully saved" }
       : { status: false, message: "Failed to save Terms and Conditions" };
@@ -145,6 +179,10 @@ const socalMediaLinksIntoDb = async (payload: TSocalMediaLinks) => {
       payload,
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
+
+    if (result) {
+       notifyAllUsers("Settings Updated", "General website settings and contact info have been updated.");
+    }
 
     return result
       ? { status: true, message: "Social Media Links successfully saved" }
@@ -203,15 +241,23 @@ const SettingServices = {
 };
 
 async function createPromotion<T>(model: Model<T>, payload: T) {
-  return await model.create(payload);
+  const result = await model.create(payload);
+  if (result) {
+    notifyAllUsers("New Promotion Available", "A new promotion has been added to the website.");
+  }
+  return result;
 }
 
 async function getPromotions<T>(model: Model<T>) {
-  return await model.find().select('-isDelete -createdAt -updatedAt -__v');
+  return await model.find({ isDelete: { $ne: true } }).select('-isDelete -createdAt -updatedAt -__v');
 }
 
 async function updatePromotion<T>(model: Model<T>, id: string, payload: Partial<T>) {
-  return await model.findByIdAndUpdate(id, payload, { new: true });
+  const result = await model.findByIdAndUpdate(id, payload, { new: true });
+  if (result) {
+    notifyAllUsers("Promotion Updated", "One of our promotions has been updated.");
+  }
+  return result;
 }
 
 async function deletePromotion<T>(model: Model<T>, id: string) {

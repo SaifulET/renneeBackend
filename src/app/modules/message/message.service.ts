@@ -63,6 +63,16 @@ const sendMessage = async (
         });
     }
 
+    // Create a notification for the receiver
+    const { NotificationService } = await import("../notifications/notification.service");
+    await NotificationService.createNotification(
+        receiverId,
+        "New Message",
+        text || "You received an image",
+        "message",
+        { senderId, relatedId: conversation._id.toString() }
+    );
+
 
     console.log(newMessage)
 

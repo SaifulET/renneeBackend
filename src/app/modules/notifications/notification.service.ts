@@ -254,11 +254,12 @@ const sendBulkNotifications = async (
     if (usersWithFCM.length > 0) {
       const { sendPushNotification } = await import("../../utils/notification.helper");
       
-      for (const user of usersWithFCM) {
-        if (user.fcm) {
-          await sendPushNotification(user.fcm, title, message);
-        }
-      }
+      // Send push notifications in parallel
+      await Promise.all(
+        usersWithFCM.map(user => 
+          user.fcm ? sendPushNotification(user.fcm, title, message).catch(err => console.error(`Failed to send push to ${user._id}:`, err)) : Promise.resolve()
+        )
+      );
     }
 
     return createdNotifications;
