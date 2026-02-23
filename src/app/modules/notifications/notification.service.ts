@@ -39,6 +39,12 @@ const createNotification = async (
       await sendPushNotification(user.fcm, title, message);
     }
 
+    // Send real-time notification via socket
+    const io = (global as any).io;
+    if (io) {
+      io.to(`user_${recipientId}`).emit("new_notification", notification);
+    }
+
     return notification;
   } catch (error) {
     throw new AppError(
@@ -230,6 +236,14 @@ const sendBulkNotifications = async (
 
     // Always create database notifications
     const createdNotifications = await Notification.insertMany(notifications);
+
+    // Send real-time notifications via socket
+    const io = (global as any).io;
+    if (io) {
+      createdNotifications.forEach((notif) => {
+        io.to(`user_${notif.recipient.toString()}`).emit("new_notification", notif);
+      });
+    }
 
     // Send push notifications only to users with FCM tokens
     const usersWithFCM = await users.find({
