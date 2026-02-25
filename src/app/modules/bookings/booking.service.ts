@@ -319,9 +319,17 @@ const getMyPaidBookings = async (userId: string, query: Record<string, unknown>)
     })
     .populate({
       path: 'consultant',
-      select: 'name email phone images'
+      select: 'fullname email photo phoneNumber'
     })
-    .sort({ date: 1, slot_time: 1 }) // Sort by date ascending
+    .populate({
+      path: 'user',
+      select: 'fullname email photo phoneNumber'
+    })
+    .populate({
+      path: 'conversation',
+      select: 'participants lastMessage lastMessageTime'
+    })
+    .sort({ updatedAt: -1 }) // Sort by updatedAt descending (most recent first)
     .skip(skip)
     .limit(limitNumber);
 
@@ -540,17 +548,21 @@ const getAllBookedDataForAdmin = async (query: Record<string, unknown>) => {
     })
     .populate({
       path: 'consultant',
-      select: 'name email phone images'
+      select: 'fullname photo'
     })
     .populate({
       path: 'user',
-      select: 'name email phone images'
+      select: 'fullname photo'
     })
     .populate({
       path: 'discount',
       select: 'percentage useablecode'
     })
-    .sort({ date: -1, slot_time: -1 }) // Sort by date descending (most recent first)
+    .populate({
+      path: 'conversation',
+      select: 'participants lastMessage lastMessageTime'
+    })
+    .sort({ updatedAt: -1 }) // Sort by updatedAt descending (most recent first)
     .skip(skip)
     .limit(limitNumber);
 
@@ -597,13 +609,21 @@ const getAllBookedDataForConsultant = async (consultantId: string, query: Record
     })
     .populate({
       path: 'user',
-      select: 'name email phone images'
+      select: 'fullname email photo phoneNumber'
+    })
+    .populate({
+      path: 'consultant',
+      select: 'fullname email photo phoneNumber'
     })
     .populate({
       path: 'discount',
       select: 'percentage useablecode'
     })
-    .sort({ date: -1, slot_time: -1 }) // Sort by date descending (most recent first)
+    .populate({
+      path: 'conversation',
+      select: 'participants lastMessage lastMessageTime'
+    })
+    .sort({ updatedAt: -1 }) // Sort by updatedAt descending (most recent first)
     .skip(skip)
     .limit(limitNumber);
 
