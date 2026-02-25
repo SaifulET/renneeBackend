@@ -1,7 +1,6 @@
 import { RequestHandler } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../utils/asyncCatch";
-import sendResponse from "../../utils/sendResponse";
 
 // Success page handler
 const paymentSuccess: RequestHandler = catchAsync(async (req, res) => {
@@ -250,7 +249,6 @@ const paymentCancel: RequestHandler = catchAsync(async (req, res) => {
         <div class="countdown">
           This window will close automatically in <span id="countdown">5</span> seconds...
         </div>
-        <a href="https://renee-dashboard-update.vercel.app" class="btn">Return to App</a>
       </div>
 
       <script>

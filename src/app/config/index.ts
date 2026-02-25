@@ -1,6 +1,11 @@
 import donenv from "dotenv";
 import path from "path";
 donenv.config({ path: path.join(process.cwd(), ".env") });
+
+const backendBaseUrl =
+  process.env.BACKEND_BASE_URL ||
+  `http://${process.env.HOST || "localhost"}:${process.env.PORT || 5000}`;
+
 export default {
   port: process.env.PORT,
   database_url: process.env.DATABASE_URL,
@@ -25,8 +30,10 @@ export default {
     stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
     onboarding_refresh_url: process.env.ONBOARDING_REFRESH_URL,
     onboarding_return_url: process.env.ONBOARDING_RETURN_URL,
-    checkout_success_url: process.env.CHECKOUT_SUCCESS_URL,
-    checkout_cancel_url: process.env.CHECKOUT_CANCEL_URL,
+    checkout_success_url:
+      process.env.CHECKOUT_SUCCESS_URL || `${backendBaseUrl}/api/v1/payment/success`,
+    checkout_cancel_url:
+      process.env.CHECKOUT_CANCEL_URL || `${backendBaseUrl}/api/v1/payment/cancel`,
   },
   file_path: process.env.FILE_PATH,
   host: process.env.HOST,

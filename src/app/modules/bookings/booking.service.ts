@@ -9,6 +9,7 @@ import users from "../user/user.model";
 import { Discount } from "../discounts/discount.model";
 import { Conversation } from "../message/message.model";
 import { USER_ROLE } from "../user/user.constant";
+import { Types } from "mongoose";
 
 const getSingleBooking = async (id: string) => {
   const booking = await Booking.findById(id)
@@ -292,7 +293,7 @@ const getMyPaidBookings = async (userId: string, query: Record<string, unknown>)
   const limitNumber = Number(limit);
   const skip = (pageNumber - 1) * limitNumber;
 
-  const matchQuery: any = { user: userId };
+  const matchQuery: any = { user: new Types.ObjectId(userId) };
 
   // Use start of today to ensure "ongoing" includes bookings later today
   // and "completed" includes strictly past days.
@@ -312,26 +313,101 @@ const getMyPaidBookings = async (userId: string, query: Record<string, unknown>)
   const total = await Booking.countDocuments(matchQuery);
   const totalPage = Math.ceil(total / limitNumber);
 
-  const result = await Booking.find(matchQuery)
-    .populate({
-      path: 'service',
-      select: 'title description price imgs availability_type duration'
-    })
-    .populate({
-      path: 'consultant',
-      select: 'fullname email photo phoneNumber'
-    })
-    .populate({
-      path: 'user',
-      select: 'fullname email photo phoneNumber'
-    })
-    .populate({
-      path: 'conversation',
-      select: 'participants lastMessage lastMessageTime'
-    })
-    .sort({ updatedAt: -1 }) // Sort by updatedAt descending (most recent first)
-    .skip(skip)
-    .limit(limitNumber);
+  // NOTE: We use aggregation here because Mongoose can't sort by populated fields.
+  // This sorts bookings by conversation.lastMessageTime so the latest messaged chat appears first.
+  const result = await Booking.aggregate([
+    { $match: matchQuery },
+    {
+      $lookup: {
+        from: 'conversations',
+        localField: 'conversation',
+        foreignField: '_id',
+        as: 'conversation',
+      },
+    },
+    { $unwind: { path: '$conversation', preserveNullAndEmptyArrays: true } },
+    { $addFields: { lastMessageTimeSort: '$conversation.lastMessageTime' } },
+    { $sort: { lastMessageTimeSort: -1, updatedAt: -1 } },
+    { $skip: skip },
+    { $limit: limitNumber },
+
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        as: 'service',
+      },
+    },
+    { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'consultant',
+        foreignField: '_id',
+        as: 'consultant',
+      },
+    },
+    { $unwind: { path: '$consultant', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'discounts',
+        localField: 'discount',
+        foreignField: '_id',
+        as: 'discount',
+      },
+    },
+    { $unwind: { path: '$discount', preserveNullAndEmptyArrays: true } },
+
+    {
+      $project: {
+        _id: 1,
+        date: 1,
+        slot_time: 1,
+        meeting_type: 1,
+        payment_status: 1,
+        transaction_id: 1,
+        createdAt: 1,
+        updatedAt: 1,
+
+        user: { _id: '$user._id', fullname: '$user.fullname', photo: '$user.photo' },
+        consultant: {
+          _id: '$consultant._id',
+          fullname: '$consultant.fullname',
+          photo: '$consultant.photo',
+        },
+        service: {
+          _id: '$service._id',
+          title: '$service.title',
+          description: '$service.description',
+          price: '$service.price',
+          imgs: '$service.imgs',
+          availability_type: '$service.availability_type',
+          duration: '$service.duration',
+        },
+        discount: {
+          _id: '$discount._id',
+          percentage: '$discount.percentage',
+          useablecode: '$discount.useablecode',
+        },
+        conversation: {
+          _id: '$conversation._id',
+          participants: '$conversation.participants',
+          lastMessage: '$conversation.lastMessage',
+          lastMessageTime: '$conversation.lastMessageTime',
+        },
+      },
+    },
+  ]);
 
   return {
     meta: {
@@ -584,7 +660,7 @@ const getAllBookedDataForConsultant = async (consultantId: string, query: Record
   const limitNumber = Number(limit);
   const skip = (pageNumber - 1) * limitNumber;
 
-  const matchQuery: any = { consultant: consultantId };
+  const matchQuery: any = { consultant: new Types.ObjectId(consultantId) };
 
   // Filter by payment status
   if (status) {
@@ -602,30 +678,101 @@ const getAllBookedDataForConsultant = async (consultantId: string, query: Record
   const total = await Booking.countDocuments(matchQuery);
   const totalPage = Math.ceil(total / limitNumber);
 
-  const result = await Booking.find(matchQuery)
-    .populate({
-      path: 'service',
-      select: 'title description price imgs availability_type duration'
-    })
-    .populate({
-      path: 'user',
-      select: 'fullname email photo phoneNumber'
-    })
-    .populate({
-      path: 'consultant',
-      select: 'fullname email photo phoneNumber'
-    })
-    .populate({
-      path: 'discount',
-      select: 'percentage useablecode'
-    })
-    .populate({
-      path: 'conversation',
-      select: 'participants lastMessage lastMessageTime'
-    })
-    .sort({ updatedAt: -1 }) // Sort by updatedAt descending (most recent first)
-    .skip(skip)
-    .limit(limitNumber);
+  // NOTE: We use aggregation here because Mongoose can't sort by populated fields.
+  // This sorts bookings by conversation.lastMessageTime so the latest messaged chat appears first.
+  const result = await Booking.aggregate([
+    { $match: matchQuery },
+    {
+      $lookup: {
+        from: 'conversations',
+        localField: 'conversation',
+        foreignField: '_id',
+        as: 'conversation',
+      },
+    },
+    { $unwind: { path: '$conversation', preserveNullAndEmptyArrays: true } },
+    { $addFields: { lastMessageTimeSort: '$conversation.lastMessageTime' } },
+    { $sort: { lastMessageTimeSort: -1, updatedAt: -1 } },
+    { $skip: skip },
+    { $limit: limitNumber },
+
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        as: 'service',
+      },
+    },
+    { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'consultant',
+        foreignField: '_id',
+        as: 'consultant',
+      },
+    },
+    { $unwind: { path: '$consultant', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'discounts',
+        localField: 'discount',
+        foreignField: '_id',
+        as: 'discount',
+      },
+    },
+    { $unwind: { path: '$discount', preserveNullAndEmptyArrays: true } },
+
+    {
+      $project: {
+        _id: 1,
+        date: 1,
+        slot_time: 1,
+        meeting_type: 1,
+        payment_status: 1,
+        transaction_id: 1,
+        createdAt: 1,
+        updatedAt: 1,
+
+        user: { _id: '$user._id', fullname: '$user.fullname', photo: '$user.photo' },
+        consultant: {
+          _id: '$consultant._id',
+          fullname: '$consultant.fullname',
+          photo: '$consultant.photo',
+        },
+        service: {
+          _id: '$service._id',
+          title: '$service.title',
+          description: '$service.description',
+          price: '$service.price',
+          imgs: '$service.imgs',
+          availability_type: '$service.availability_type',
+          duration: '$service.duration',
+        },
+        discount: {
+          _id: '$discount._id',
+          percentage: '$discount.percentage',
+          useablecode: '$discount.useablecode',
+        },
+        conversation: {
+          _id: '$conversation._id',
+          participants: '$conversation.participants',
+          lastMessage: '$conversation.lastMessage',
+          lastMessageTime: '$conversation.lastMessageTime',
+        },
+      },
+    },
+  ]);
 
   return {
     meta: {
