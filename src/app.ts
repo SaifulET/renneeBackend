@@ -14,6 +14,7 @@ import globalErrorHandelar from "./app/middlewares/globalErrorHandler";
 import AppError from "./app/errors/AppError";
 import status from "http-status";
 import superAdmin from "./app/utils/superAdmin";
+import connectDb from "./app/utils/connectDb";
 import httpStatus from "http-status";
 import auto_delete_unverifyed_user from "./app/utils/auto_delete_unverifyed_user";
 
@@ -55,7 +56,19 @@ app.use(
   express.static(path.join(__dirname, "public"))
 );
 app.use(cors());
-superAdmin();
+
+app.use(async (req, _res, next) => {
+  if (req.path === "/") {
+    next();
+    return;
+  }
+  try {
+    await connectDb();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 cron.schedule("0 0 * * *", async () => {
   try {
