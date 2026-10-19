@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GENDER } from "../user/user.constant";
+import { GENDER_VALUES, normalizeGender } from "../user/user.constant";
 
 const LoginSchema = z.object({
   body: z.object({
@@ -44,7 +44,13 @@ const changeMyProfileSchema = z.object({
         .min(1, { error: "min  1  character needed" })
         .max(100, { error: "max 100 character accepted" }),
       photo: z.string({ error: "photo is require" }).optional(),
-      gender: z.enum([GENDER.male, GENDER.female, GENDER.others]).optional(),
+      gender: z
+        .string()
+        .optional()
+        .transform((value) => (value ? normalizeGender(value) ?? value : value))
+        .refine((value) => value === undefined || GENDER_VALUES.includes(value as (typeof GENDER_VALUES)[number]), {
+          message: "Gender must be Male, FeMale, Female, or Others",
+        }),
       phoneNumber: z
         .string({ message: "Phone number is required" })
         .optional(),

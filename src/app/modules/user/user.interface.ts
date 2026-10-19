@@ -11,7 +11,7 @@ export type TUser = {
   role: "buyer" | "consultant" | "admin" | "superAdmin";
   auth_type: "email" | "google" | "apple";
   specialty?: string;
-  gender: "Male" | "Female" | "Others";
+  gender: "Male" | "Female" | "FeMale" | "Others";
   fullname: string;
   password?: string; // Made optional for social login
   email: string;

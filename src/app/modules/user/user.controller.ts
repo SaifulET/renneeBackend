@@ -48,9 +48,8 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 const userVarification: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserServices.userVarificationIntoDb(
-    req.body.verificationCode
-  );
+  const rawCode = req.body.verificationCode ?? req.body.otp ?? req.body.code;
+  const result = await UserServices.userVarificationIntoDb(rawCode, req.body.email);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

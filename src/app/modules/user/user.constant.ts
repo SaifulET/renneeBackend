@@ -13,13 +13,35 @@ export const USER_ACCESSIBILITY = {
   blocked: "blocked",
 } as const;
 
-//   male: "Male" | "Female" | "Others";
-
+// App signup sends "FeMale". "Female" stays valid for older records.
 export const GENDER = {
   male: "Male",
   female: "Female",
+  feMale: "FeMale",
   others: "Others",
 } as const;
+
+export const GENDER_VALUES = [
+  GENDER.male,
+  GENDER.female,
+  GENDER.feMale,
+  GENDER.others,
+] as const;
+
+export type TGender = (typeof GENDER_VALUES)[number];
+
+export const normalizeGender = (value: string): TGender | null => {
+  const trimmed = value.trim();
+  const key = trimmed.toLowerCase();
+
+  if (key === "male") return GENDER.male;
+  if (key === "other" || key === "others") return GENDER.others;
+  if (key === "female") {
+    return trimmed.includes("M") && trimmed !== "Female" ? GENDER.feMale : GENDER.female;
+  }
+
+  return null;
+};
 
 export interface UserResponse {
   status: boolean;

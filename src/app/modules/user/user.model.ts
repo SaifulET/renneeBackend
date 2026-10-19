@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { Schema, model } from "mongoose";
 
-import { GENDER, USER_ACCESSIBILITY, USER_ROLE } from "./user.constant";
+import { GENDER_VALUES, normalizeGender, USER_ACCESSIBILITY, USER_ROLE } from "./user.constant";
 import { TUser, UserModel } from "./user.interface";
 import config from "../../config";
 
@@ -22,10 +22,14 @@ const TUserSchema = new Schema<TUser, UserModel>(
     gender: {
       type: String,
       enum: {
-        values: [GENDER.male, GENDER.female, GENDER.others],
-        message: "{VALUE} is Not Required",
+        values: [...GENDER_VALUES],
+        message: "{VALUE} is not a valid gender. Use Male, FeMale, Female, or Others",
       },
-      required: [false, "Role is Required"],
+      set: (value: string) => {
+        if (typeof value !== "string") return value;
+        return normalizeGender(value) ?? value;
+      },
+      required: [false, "Gender is not required"],
     },
 
 
@@ -144,7 +148,7 @@ TUserSchema.pre("save", async function (next) {
 // });
 
 TUserSchema.pre("find", function (next) {
-  this.find({ isDelete: { $ne: true } });
+  this.where({ isDelete: { $ne: true } });
   next();
 });
 
@@ -154,7 +158,7 @@ TUserSchema.pre("aggregate", function (next) {
 });
 
 TUserSchema.pre("findOne", function (next) {
-  this.findOne({ isDelete: { $ne: true } });
+  this.where({ isDelete: { $ne: true } });
   next();
 });
 

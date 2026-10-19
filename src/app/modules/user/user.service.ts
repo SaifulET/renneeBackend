@@ -71,7 +71,8 @@ const createUserIntoDb = async (payload: TUser) => {
           otp,
           "User Verification Email"
         ),
-        "Verification OTP Code"
+        "Verification OTP Code",
+        `Your verification code is ${otp}. It expires in 10 minutes.`
       );
       return result && { status: true, message: "Check your email inbox" };
     }
@@ -86,6 +87,10 @@ const createUserIntoDb = async (payload: TUser) => {
       throw error;
     }
 
+    if (error?.name === "ValidationError") {
+      throw new AppError(httpStatus.BAD_REQUEST, error.message, "");
+    }
+
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
       "Server unavailable",
@@ -94,57 +99,57 @@ const createUserIntoDb = async (payload: TUser) => {
   }
 };
 
-const userVarificationIntoDb = async (verificationCode: number) => {
-  try {
-    if (!verificationCode) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Verification code is required"
-      );
-    }
-
-
-    console.log(verificationCode)
-
-    const updatedUser = await users.findOneAndUpdate(
-      { verificationCode },
-      {
-        isVerify: true,
-      },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      throw new AppError(httpStatus.NOT_FOUND, "Invalid verification code", "");
-    }
-
-    const jwtPayload = {
-      id: updatedUser.id,
-      role: updatedUser.role,
-      email: updatedUser.email,
-    };
-
-    let accessToken: string | null = null;
-
-    if (updatedUser.isVerify) {
-      accessToken = jwtHelpers.generateToken(
-        jwtPayload,
-        config.jwt_access_secret as string,
-        config.expires_in as string
-      );
-    }
-
-    return {
-      message: "User verification successful",
-      accessToken,
-    };
-  } catch (error: any) {
-    throw new AppError(
-      httpStatus.SERVICE_UNAVAILABLE,
-      "Verification auth error",
-      error
-    );
+const parseVerificationCode = (verificationCode: unknown): number => {
+  if (verificationCode === undefined || verificationCode === null || verificationCode === "") {
+    throw new AppError(httpStatus.BAD_REQUEST, "Verification code is required", "");
   }
+
+  const raw = typeof verificationCode === "string" ? verificationCode.trim() : verificationCode;
+  const code = typeof raw === "number" ? raw : Number(raw);
+
+  if (!Number.isInteger(code) || code < 100000 || code > 999999) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Verification code must be 6 digits", "");
+  }
+
+  return code;
+};
+
+const userVarificationIntoDb = async (verificationCode: unknown, email?: unknown) => {
+  const code = parseVerificationCode(verificationCode);
+
+  const filter: Record<string, unknown> = {};
+  if (typeof email === "string" && email.trim()) {
+    filter.email = email.trim();
+  } else {
+    filter.verificationCode = code;
+  }
+
+  const existingUser = await users.findOne(filter).select("verificationCode email role");
+  const storedCode = Number(existingUser?.verificationCode);
+
+  if (!existingUser || storedCode !== code) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid verification code", "");
+  }
+
+  const accessToken = jwtHelpers.generateToken(
+    {
+      id: existingUser.id,
+      role: existingUser.role,
+      email: existingUser.email,
+    },
+    config.jwt_access_secret as string,
+    config.expires_in as string
+  );
+
+  await users.findByIdAndUpdate(existingUser._id, {
+    $set: { isVerify: true },
+    $unset: { verificationCode: "" },
+  });
+
+  return {
+    message: "User verification successful",
+    accessToken,
+  };
 };
 
 const chnagePasswordIntoDb = async (
@@ -274,7 +279,8 @@ const forgotPasswordIntoDb = async (payload: string | { email: string }) => {
           otp,
           " Forgot Password Email"
         ),
-        "Forgot Password Verification OTP Code"
+        "Forgot Password Verification OTP Code",
+        `Your verification code is ${otp}. It expires in 10 minutes.`
       );
     } catch (emailError: any) {
       await session.abortTransaction();

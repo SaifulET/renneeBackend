@@ -2,11 +2,14 @@ import nodemailer from 'nodemailer';
 import config from '../config';
 
 
-const sendEmail = async (to: string, html: string, subject?: string) => {
+const sendEmail = async (to: string, html: string, subject?: string, text?: string) => {
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com.',
+    host: 'smtp.gmail.com',
     port: 587,
-    secure: config.NODE_ENV?.includes('production'),
+    secure: false,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     auth: {
       user: config.send_email.nodemailer_email,
       pass: config.send_email.nodemailer_password,
@@ -16,8 +19,8 @@ const sendEmail = async (to: string, html: string, subject?: string) => {
   await transporter.sendMail({
     from: config.send_email.nodemailer_email,
     to,
-    subject: subject ? subject : 'User Varification Email',
-    text: 'Varify Email with in 10 mins',
+    subject: subject ? subject : 'User Verification Email',
+    text: text || 'Verify your email within 10 minutes.',
     html,
   });
 };

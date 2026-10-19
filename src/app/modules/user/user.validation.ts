@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { USER_ACCESSIBILITY, USER_ROLE } from "./user.constant";
+import { GENDER_VALUES, normalizeGender, USER_ACCESSIBILITY, USER_ROLE } from "./user.constant";
 
 const createUserZodSchema = z.object({
   body: z.object({
@@ -37,15 +37,36 @@ const createUserZodSchema = z.object({
 
     photo: z.string({ message: "photo is not required" }).optional(),
     address: z.string({ message: "address is not required" }).optional(),
+    gender: z
+      .string()
+      .optional()
+      .transform((value) => (value ? normalizeGender(value) ?? value : value))
+      .refine((value) => value === undefined || GENDER_VALUES.includes(value as (typeof GENDER_VALUES)[number]), {
+        message: "Gender must be Male, FeMale, Female, or Others",
+      }),
   }),
 });
 
+const verificationCodeField = z
+  .union([
+    z.number(),
+    z.string().trim().regex(/^\d{6}$/, "Verification code must be 6 digits"),
+  ])
+  .transform((value) => (typeof value === "string" ? Number(value) : value))
+  .refine((value) => Number.isInteger(value) && value >= 100000 && value <= 999999, {
+    message: "Verification code must be 6 digits",
+  });
+
 const UserVerification = z.object({
-  body: z.object({
-    verificationCode: z
-      .number({ message: "verification code is required" })
-      .min(6, { message: "min 6 digits accepted" }),
-  }),
+  body: z
+    .object({
+      verificationCode: verificationCodeField.optional(),
+      otp: verificationCodeField.optional(),
+      code: verificationCodeField.optional(),
+    })
+    .refine((body) => body.verificationCode || body.otp || body.code, {
+      message: "Verification code is required",
+    }),
 });
 
 const ChnagePasswordSchema = z.object({
@@ -91,10 +112,7 @@ const ForgotPasswordSchema = z.object({
 
 const verificationCodeSchema = z.object({
   body: z.object({
-    verificationCode: z
-      .number({ message: "verificationCode is required" })
-      .min(100000, { message: "must be at least 6 digits" })
-      .max(999999, { message: "must be at most 6 digits" }),
+    verificationCode: verificationCodeField,
   }),
 });
 
