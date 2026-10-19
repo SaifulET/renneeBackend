@@ -1,12 +1,20 @@
 import Stripe from "stripe";
 import config from "../config";
 
-const stripe = new Stripe(config.stripe_payment_gateway.stripe_secret_key as string, {
-  // apiVersion: '2025-01-27.acacia',
-});
+let stripeClient: Stripe | null = null;
+
+const getStripe = () => {
+  if (stripeClient) return stripeClient;
+  const key = config.stripe_payment_gateway.stripe_secret_key;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not set");
+  }
+  stripeClient = new Stripe(key);
+  return stripeClient;
+};
 
 const createPaymentIntent = async (amount: number) => {
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await getStripe().paymentIntents.create({
     amount: Math.round(amount * 100), // convert to cents
     currency: "usd",
     // automatic_payment_methods: {
@@ -17,7 +25,7 @@ const createPaymentIntent = async (amount: number) => {
 };
 
 const retrievePaymentIntent = async (id: string) => {
-  return await stripe.paymentIntents.retrieve(id);
+  return await getStripe().paymentIntents.retrieve(id);
 }
 
 const createCheckoutSession = async (payload: {
@@ -27,7 +35,7 @@ const createCheckoutSession = async (payload: {
   metadata: Record<string, string>;
   customerEmail?: string;
 }) => {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
       {
@@ -52,7 +60,7 @@ const createCheckoutSession = async (payload: {
 };
 
 const verifyWebhookEvent = (body: string | Buffer, signature: string) => {
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     body,
     signature,
     config.stripe_payment_gateway.stripe_webhook_secret as string
