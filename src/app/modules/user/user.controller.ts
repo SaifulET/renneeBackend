@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import httpStatus from "http-status";
 import UserServices from "./user.service";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import catchAsync from "../../utils/asyncCatch";
 import { NotificationService } from "../notifications/notification.service";
 import users from "./user.model";
@@ -136,7 +137,7 @@ const getAllConsult: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const getSingleUser: RequestHandler = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = routeParam(req.params.id);
   const result = await UserServices.getSingleUserIntoDb(id);
   sendResponse(res, {
     success: true,
@@ -148,7 +149,7 @@ const getSingleUser: RequestHandler = catchAsync(async (req, res) => {
 
 const deleteAllTypesOfUser: RequestHandler = catchAsync(async (req, res) => {
 
-  const result = await UserServices.deleteAllTypesOfUserIntoDb(req.params.id);
+  const result = await UserServices.deleteAllTypesOfUserIntoDb(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

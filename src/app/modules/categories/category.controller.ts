@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import httpStatus from "http-status";
 import { CategoryService } from "./category.service";
 
@@ -26,7 +27,7 @@ const getAllCategories = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCategoryById = catchAsync(async (req: Request, res: Response) => {
-  const result = await CategoryService.getCategoryById(req.params.id);
+  const result = await CategoryService.getCategoryById(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -46,7 +47,7 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteCategory = catchAsync(async (req: Request, res: Response) => {
-  const result = await CategoryService.deleteCategory(req.params.id);
+  const result = await CategoryService.deleteCategory(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

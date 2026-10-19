@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import { MessageService } from "./message.service";
 import AppError from "../../errors/AppError";
 
@@ -9,7 +10,7 @@ import { uploadImageToCloudinary } from "../../utils/cloudinary";
 import fs from "fs";
 
 const sendMessage = catchAsync(async (req: Request, res: Response) => {
-    const { conversationId } = req.params;
+    const conversationId = routeParam(req.params.conversationId);
     const { text } = req.body;
     const user = (req as any).user;
     const senderId = user.id;
@@ -59,7 +60,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getConversation = catchAsync(async (req: Request, res: Response) => {
-    const { receiverId } = req.params;
+    const receiverId = routeParam(req.params.receiverId);
     const user = (req as any).user;
     const userId = user.id;
 
@@ -89,7 +90,7 @@ const getChatList = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getConversationMessages = catchAsync(async (req: Request, res: Response) => {
-    const { conversationId } = req.params;
+    const conversationId = routeParam(req.params.conversationId);
     const user = (req as any).user;
     
     const result = await MessageService.getConversationMessages(conversationId, req.query);

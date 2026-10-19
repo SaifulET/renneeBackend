@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import { NotificationService } from "./notification.service";
 import { INotificationQuery } from "./notification.interface";
 
@@ -21,7 +22,7 @@ const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
 });
 
 const markAsRead = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = routeParam(req.params.id);
   const userId = (req as any).user.id;
 
   const result = await NotificationService.markNotificationAsRead(id, userId);
@@ -48,7 +49,7 @@ const markAllAsRead = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteNotification = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = routeParam(req.params.id);
   const userId = (req as any).user.id;
 
   const result = await NotificationService.deleteNotification(id, userId);

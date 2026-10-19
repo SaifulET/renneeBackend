@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import httpStatus from "http-status";
 import { BookingService } from "./booking.service";
 import { PaymentHelper } from "../../utils/payment.helper";
@@ -77,7 +78,7 @@ const getMyPaidBookings = catchAsync(async (req: Request, res: Response) => {
 });
 
 const cancelBooking = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = routeParam(req.params.id);
   const result = await BookingService.cancelBooking(id);
   sendResponse(res, {
     success: true,
@@ -98,7 +99,7 @@ const confirmBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleBooking = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = routeParam(req.params.id);
   const result = await BookingService.getSingleBooking(id);
   sendResponse(res, {
     success: true,

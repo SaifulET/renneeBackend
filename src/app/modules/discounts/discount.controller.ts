@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/asyncCatch';
 import sendResponse from '../../utils/sendResponse';
+import routeParam from '../../utils/routeParam';
 import { DiscountServices } from './discount.service';
 
 const createDiscount = catchAsync(async (req, res) => {
@@ -26,7 +27,7 @@ const getAllDiscounts = catchAsync(async (req, res) => {
 });
 
 const getDiscountById = catchAsync(async (req, res) => {
-    const { id } = req.params;
+    const id = routeParam(req.params.id);
     const result = await DiscountServices.getDiscountByIdFromDb(id);
 
     sendResponse(res, {
@@ -38,7 +39,7 @@ const getDiscountById = catchAsync(async (req, res) => {
 });
 
 const updateDiscount = catchAsync(async (req, res) => {
-    const { id } = req.params;
+    const id = routeParam(req.params.id);
     const result = await DiscountServices.updateDiscountIntoDb(id, req.body);
 
     sendResponse(res, {
@@ -50,7 +51,7 @@ const updateDiscount = catchAsync(async (req, res) => {
 });
 
 const deleteDiscount = catchAsync(async (req, res) => {
-    const { id } = req.params;
+    const id = routeParam(req.params.id);
     const result = await DiscountServices.deleteDiscountFromDb(id);
 
     sendResponse(res, {

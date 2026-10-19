@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import httpStatus from "http-status";
 import { ServiceService } from "./service.service";
 
@@ -26,7 +27,7 @@ const getAllServices = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getServiceById = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.getServiceById(req.params.id);
+  const result = await ServiceService.getServiceById(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -46,7 +47,7 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteService = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.deleteService(req.params.id);
+  const result = await ServiceService.deleteService(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

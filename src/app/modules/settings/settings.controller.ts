@@ -3,6 +3,7 @@ import { RequestHandler } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../utils/asyncCatch";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import SettingServices from "./settings.services";
 import { uploadImageToCloudinary, uploadBufferToCloudinary } from "../../utils/cloudinary";
 
@@ -114,11 +115,11 @@ const SettingController = {
       const uploadResult = await uploadBufferToCloudinary(req.file.buffer, 'promotion');
       req.body.img = uploadResult.secure_url;
     }
-    const result = await SettingServices.updateWebsitePromotionIntoDb(req.params.id, req.body);
+    const result = await SettingServices.updateWebsitePromotionIntoDb(routeParam(req.params.id), req.body);
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion updated", data: result });
   }),
   deleteWebsitePromotion: catchAsync(async (req, res) => {
-    const result = await SettingServices.deleteWebsitePromotionFromDb(req.params.id);
+    const result = await SettingServices.deleteWebsitePromotionFromDb(routeParam(req.params.id));
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion deleted", data: result });
   }),
 
@@ -140,11 +141,11 @@ const SettingController = {
       const uploadResult = await uploadBufferToCloudinary(req.file.buffer, 'promotion');
       req.body.img = uploadResult.secure_url;
     }
-    const result = await SettingServices.updateProductPromotionIntoDb(req.params.id, req.body);
+    const result = await SettingServices.updateProductPromotionIntoDb(routeParam(req.params.id), req.body);
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion updated", data: result });
   }),
   deleteProductPromotion: catchAsync(async (req, res) => {
-    const result = await SettingServices.deleteProductPromotionFromDb(req.params.id);
+    const result = await SettingServices.deleteProductPromotionFromDb(routeParam(req.params.id));
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion deleted", data: result });
   }),
 
@@ -166,11 +167,11 @@ const SettingController = {
       const uploadResult = await uploadBufferToCloudinary(req.file.buffer, 'promotion');
       req.body.img = uploadResult.secure_url;
     }
-    const result = await SettingServices.updateVendorsPromotionIntoDb(req.params.id, req.body);
+    const result = await SettingServices.updateVendorsPromotionIntoDb(routeParam(req.params.id), req.body);
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion updated", data: result });
   }),
   deleteVendorsPromotion: catchAsync(async (req, res) => {
-    const result = await SettingServices.deleteVendorsPromotionFromDb(req.params.id);
+    const result = await SettingServices.deleteVendorsPromotionFromDb(routeParam(req.params.id));
     sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Promotion deleted", data: result });
   }),
 };

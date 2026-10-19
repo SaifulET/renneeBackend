@@ -5,6 +5,7 @@ import catchAsync from "../../utils/asyncCatch";
 import AuthServices from "./auth.service";
 import config from "../../config";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 
 const loginUser: RequestHandler = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUserIntoDb(req.body);
@@ -70,7 +71,7 @@ const findByAllUsersAdmin: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const deleteAccount: RequestHandler = catchAsync(async (req, res) => {
-  const result = await AuthServices.deleteAccountIntoDb(req.params.id);
+  const result = await AuthServices.deleteAccountIntoDb(routeParam(req.params.id));
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -81,7 +82,7 @@ const deleteAccount: RequestHandler = catchAsync(async (req, res) => {
 
 const isBlockAccount: RequestHandler = catchAsync(async (req, res) => {
   const result = await AuthServices.isBlockAccountIntoDb(
-    req.params.id,
+    routeParam(req.params.id),
     req.body
   );
   sendResponse(res, {

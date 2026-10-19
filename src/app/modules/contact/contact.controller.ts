@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import catchAsync from "../../utils/asyncCatch";
 import contactServices from "./contact.services";
 import sendResponse from "../../utils/sendResponse";
+import routeParam from "../../utils/routeParam";
 import httpStatus from "http-status";
 
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -90,7 +91,7 @@ const all_contact: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const specificContact: RequestHandler = catchAsync(async (req, res) => {
-  const result = await contactServices.specificContactIntoDb(req.params.id);
+  const result = await contactServices.specificContactIntoDb(routeParam(req.params.id));
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -101,7 +102,7 @@ const specificContact: RequestHandler = catchAsync(async (req, res) => {
 
 const updateContact: RequestHandler = catchAsync(async (req, res) => {
   const result = await contactServices.updateContactIntoDb(
-    req.params.id,
+    routeParam(req.params.id),
     req.body
   );
   sendResponse(res, {
@@ -113,7 +114,7 @@ const updateContact: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const deleteContact: RequestHandler = catchAsync(async (req, res) => {
-  const result = await contactServices.deleteContactIntoDb(req.params.id);
+  const result = await contactServices.deleteContactIntoDb(routeParam(req.params.id));
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
